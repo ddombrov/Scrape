@@ -1,0 +1,14 @@
+{
+    "name": "google-scholar-web-scraping",
+    "version": "1.0.0",
+    "description": "A project for web scraping Google Scholar using Python.",
+    "main": "index.js",
+    "scripts": {
+      "start": "python google_scholar_web_scraping.py",
+      "postinstall": "pip install beautifulsoup4 requests && python -m venv venv"
+    },
+    "author": "Daniel Dombrovsky",
+    "license": "MIT",
+    "dependencies": {}
+  }
+  
