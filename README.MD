@@ -14,7 +14,7 @@ Before you start, make sure you have Python installed on your system. You can do
 
 1. **Open your terminal** (Command Prompt on Windows, Terminal on Mac/Linux).
 
-2. **Clone the repository** (if applicable):
+2. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-username/google-scholar-web-scraping.git
+   git clone https://github.com/ddombrov/Scrape.git
    cd google-scholar-web-scraping
