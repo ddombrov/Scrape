@@ -229,15 +229,16 @@ def scrape_article(url, counters):
             
             found_something=False
 
-            if 'total citations' in article_field and value.string:
-                match = re.search(r'Cited by (\d+)', value.string)
-                if match:
-                    cited_by_number = match.group(1)
-                    counters['Citation Count'] += int(cited_by_number)
-                    print("Checkpoint 13: Good.")
-                else:
-                    print("Checkpoint 13: No 'Cited by' number found.")
-
+            if 'total citations' in article_field:
+                if value.string:
+                    match = re.search(r'Cited by (\d+)', value.string)
+                    if match:
+                        cited_by_number = match.group(1)
+                        counters['Citation Count'] += int(cited_by_number)
+                        print("Checkpoint 13: Good.")
+                    else:
+                        print("Checkpoint 13: No 'Cited by' number found.")
+                    
             elif 'preprint' in value:
                 counters['arXiv Preprint'] += 1
                 found_something=True
