@@ -13,14 +13,14 @@ def transform_url(original_url):
         print(f"Checkpoint 1: URL empty.")
         return None
     else:
-        print(f"Checkpoint 1: Good")
+        print(f"Checkpoint 1: Good.")
 
     # Ensure the URL has a scheme
     if not original_url.startswith(('http://', 'https://')):
         print(f"Checkpoint 2: Invalid URL scheme: {original_url}")
         return None
     else:
-        print(f"Checkpoint 2: Good")
+        print(f"Checkpoint 2: Good.")
 
     # Parse the original URL
     parsed_url = urlparse(original_url)
@@ -66,7 +66,7 @@ def scrape_profile(url):
         print(f"Checkpoint 3: No data for {url} found.")
         return None
     else:
-        print(f"Checkpoint 3: Good")
+        print(f"Checkpoint 3: Good.")
 
     # Set the headers for the request
     headers = {
@@ -87,7 +87,7 @@ def scrape_profile(url):
 
         if name:
             profile_data['Full Name'] = name.string
-            print(f"Checkpoint 4: Good")
+            print(f"Checkpoint 4: Good.")
         else:
             profile_data['Full Name'] = "Unknown"
             print(f"Checkpoint 4: No data for {url} found: Name not found.")
@@ -122,7 +122,7 @@ def scrape_profile(url):
                             article_urls.append(href)
 
         if article_urls:
-            print(f"Checkpoint 6: Good")
+            print(f"Checkpoint 6: Good. (profile done)")
         else:
             print(f"Checkpoint 6: No data for article urls found.")
 
@@ -142,9 +142,12 @@ def scrape_profile(url):
         for article_url in article_urls:
             time.sleep(2)  # Rate limit
             i += 1
-
-            counters = scrape_article(article_url, counters)
+            keepGoing = True
+            counters, keepGoing = scrape_article(article_url, counters)
             print(counters, "\n", i, "\n\n")
+
+            if keepGoing == False:
+                break
 
         # Add total citations to profile data
         profile_data['Total Citations'] = counters['Citation Count']
@@ -153,7 +156,7 @@ def scrape_profile(url):
         for key, value in counters.items():
             profile_data[key] = value
 
-        print(f"Checkpoint 4: Good")
+        print(f"Checkpoint 4: Good.")
 
         return profile_data
 
@@ -167,9 +170,9 @@ def scrape_article(url, counters):
 
     if not url:
         print(f"Checkpoint 7: No data for {url} found.")
-        return counters
+        return counters, True
     else:
-        print(f"Checkpoint 7: Good")
+        print(f"Checkpoint 7: Good.")
 
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -189,61 +192,85 @@ def scrape_article(url, counters):
                 date = value.string.strip() if value.string else value.get_text(strip=True)
                 break
 
-        if date and date.count('/') == 2:
-            year, month, day = date.split('/')
-            year = int(year)
-            month = int(month)
-            print(f"Checkpoint 9: Good")
+        if date:
+            print(f"Checkpoint 9: Good.")
+            if date.count('/') == 2:
+                year, month, day = date.split('/')
+                year = int(year)
+                month = int(month)
+                print(f"Checkpoint 10: Good.")
+            else:
+                print(
+                    f"Checkpoint 10: Date has invalid format. Manual inspection required.")
+                return counters, True
 
         else:
             print(
                 f"Checkpoint 9: No data for {url} found: Publication date not found.")
-            return counters
+            return counters, True
 
+        # Check if the publication date is after the input year
+        if (year <= input_year and month < 5):
+            print(f"Checkpoint 11: Publication date is after {input_year}.")
+            return counters, False
+
+        print(f"Checkpoint 11: Good.")
+
+        # Check if the publication date is in the correct range
         if not (year == input_year and month >= 5 or year == input_year + 1 and month < 5):
             print(
-                f"Checkpoint 10: No data for {url} found: Publication date is before {input_year}.")
-            return counters
-        print(f"Checkpoint 10: Good")
+                f"Checkpoint 12: Publication date is not in the correct range. (article skipped)")
+            return counters, True
+
+        print(f"Checkpoint 12: Good.")
 
         for field, value in zip(fields, values):
-            articleField = field.string.lower().strip()
+            article_field = field.string.lower().strip()
 
-            if articleField == 'total citations' and value.string:
+            if 'total citations' in article_field and value.string:
                 match = re.search(r'Cited by (\d+)', value.string)
                 if match:
                     cited_by_number = match.group(1)
                     counters['Citation Count'] += int(cited_by_number)
-                    print("Checkpoint 11: Good")
+                    print("Checkpoint 13: Good.")
                 else:
-                    print("Checkpoint 11: No 'Cited by' number found.")
+                    print("Checkpoint 13: No 'Cited by' number found.")
 
             elif 'preprint' in value:
                 counters['arXiv Preprint'] += 1
 
-            elif articleField == 'journal' and 'preprint' not in value:
+            elif article_field == 'journal' and 'preprint' not in value:
                 counters['Peer Reviewed Articles'] += 1
 
-            elif 'conference' in articleField or 'preceeding' in articleField or 'workshop' in articleField or 'meeting' in articleField:
+            elif 'conference' in article_field or 'preceeding' in article_field or 'workshop' in article_field or 'meeting' in article_field:
                 counters['Conference Papers'] += 1
 
-            elif articleField == 'book':
+            elif article_field == 'book':
                 counters['Books'] += 1
+                
+                # Check if the next field is 'book chapter' and has pages
+                next_field_index = fields.index(field) + 1
+                if next_field_index < len(fields):
+                    next_article_field = fields[next_field_index].string.lower(
+                    ).strip()
+                    next_value = values[next_field_index]
+                    
+                    # Check if the next field is 'book chapter' and has pages
+                    if ['book chapter', 'pages'] in next_article_field and next_value.string:
+                        counters['Book Chapters'] += 1
+                        counters['Books'] -= 1
 
-            elif articleField == 'book chapter' or articleField == 'pages':
-                counters['Book Chapters'] += 1
-
-            elif 'patent' in articleField:
+            elif 'patent' in article_field:
                 counters['Patent'] += 1
 
-            elif articleField == 'publication date' or articleField == 'authors' or articleField == 'description' or articleField == 'scholar articles' or articleField == 'publisher':
+            elif article_field == 'publication date' or article_field == 'authors' or article_field == 'description' or article_field == 'scholar articles' or article_field == 'publisher' or article_field == 'volume' or article_field == 'source':
                 continue
 
             else:
-                print(f"Manual inspection required.")
+                print(f"Manual inspection required for {article_field}.")
 
-        print(f"Checkpoint 8: Good")
-        return counters
+        print(f"Checkpoint 8: Good. (article done)")
+        return counters, True
 
     except requests.RequestException as e:
         print(f"Checkpoint 8: Error fetching data from URL: {e}")
@@ -272,7 +299,7 @@ def process_urls(input_file, output_file):
             f'Book Chapters {input_year}',
             f'Conference Papers {input_year}',
             f'Patent {input_year}',
-            'Total Citations', 
+            'Total Citations',
             f'Average Citations per Researcher in {input_year}',
             f'Average H-Index Since {since_input_year} per Researcher',
             'Average Overall H-Index',
