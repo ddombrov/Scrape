@@ -165,13 +165,14 @@ def scrape_profile(url):
         book_chapters = 0
         conference_papers = 0
         patents = 0
-
+        i = 0
         # Process each article
         for article_url in article_urls:
 
             # Rate limit to avoid hitting the server too quickly
             time.sleep(2)
-            # print("BEFORE: ", citation_count, peer_reviewed, preprint, books, book_chapters, conference_papers, patents)
+            print(i, '\n\n')
+            i += 1
 
             citation_count, peer_reviewed, preprint, books, book_chapters, conference_papers, patents = scrape_article(
                 article_url, citation_count, peer_reviewed, preprint, books, book_chapters, conference_papers, patents)
@@ -237,9 +238,10 @@ def scrape_article(url, citation_count, peer_reviewed, preprint, books, book_cha
 
             # Get the text and convert to lowercase
             articleField = field.string.lower().strip()
-            
-            if articleValue is not None:
-                articleValue = value.string.lower().strip()
+
+            # if articleValue is not None:
+            #    articleValue = value.string.lower().strip()
+            # print(articleField, value)
 
             if articleField == 'total citations' and value.string:
                 # print("\n\n",field,"\n\n",value,"\n\n")
@@ -256,11 +258,11 @@ def scrape_article(url, citation_count, peer_reviewed, preprint, books, book_cha
                 citation_count += int(cited_by_number)
 
             # Increment counters based on article type (can be multiple but not preprint and journal)
-            elif 'preprint' in articleValue:
+            elif 'preprint' in value:
                 preprint += 1
                 # print(articleField, preprint)
 
-            elif articleField == 'journal' and 'preprint' not in articleValue:
+            elif articleField == 'journal' and 'preprint' not in value:
                 peer_reviewed += 1
                 # print(peer_reviewed)
                 # print("\n\n", articleField, peer_reviewed, "\n\n")
@@ -283,7 +285,7 @@ def scrape_article(url, citation_count, peer_reviewed, preprint, books, book_cha
 
             elif articleField == 'publication date' or articleField == 'authors' or articleField == 'description' or articleField == 'scholar articles' or articleField == 'publisher':
                 continue
-            
+
             else:
                 print(f"Manual inspection required.")
 
@@ -351,4 +353,3 @@ input_year = 2023  # Year to extract (ex. put 2023 for May 2023 - April 2024)
 
 # Run the process
 process_urls(input_file, output_file)
-# scrape_article('https://scholar.google.ca/citations?view_op=view_citation&hl=en&user=WUlj9lsAAAAJ&sortby=pubdate&citation_for_view=WUlj9lsAAAAJ:7T2F9Uy0os0C')
