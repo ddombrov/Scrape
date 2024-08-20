@@ -123,11 +123,13 @@ def scrape_profile(url):
             'Conference Papers': 0,
             'Patent': 0
         }
+        i=0
 
         # Process each article URL
         for article_url in article_urls:
             time.sleep(2)  # Rate limit
-            print(counters, "\n\n")
+            i+=1
+            print(counters,"\n",i, "\n\n")
             counters = scrape_article(article_url, counters)
             print(counters, "\n\n")
 
