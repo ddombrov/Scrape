@@ -209,9 +209,9 @@ def scrape_article(url, counters):
                 f"Checkpoint 9: No data for {url} found: Publication date not found.")
             return counters, True
 
-        # Check if the publication date is after the input year
+        # Check if the publication date is before the input year
         if (year <= input_year and month < 5):
-            print(f"Checkpoint 11: Publication date is after {input_year}.")
+            print(f"Checkpoint 11: Publication date is before May {input_year}.")
             return counters, False
 
         print(f"Checkpoint 11: Good.")
@@ -271,14 +271,14 @@ def scrape_article(url, counters):
                 counters['Patent'] += 1
                 found_something=True
 
-            elif article_field == 'publication date' or article_field == 'authors' or article_field == 'description' or article_field == 'scholar articles' or article_field == 'publisher' or article_field == 'volume':
+            elif article_field == 'publication date' or article_field == 'authors' or article_field == 'description' or article_field == 'scholar articles' or article_field == 'publisher' or article_field == 'volume' or article_field == 'pages':
                 continue
 
-            else:
-                print(f"Manual inspection required for {article_field}.")
+            # else:
+            #     print(f"Manual inspection required for {article_field}.")
                 
-            if found_something==False:
-                print(f"Manual inspection required for {article field}.")
+            if not found_something:
+                print(f"Manual inspection required for {article_field}.")
 
         print(f"Checkpoint 8: Good. (article done)")
         return counters, True
