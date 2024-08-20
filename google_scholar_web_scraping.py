@@ -4,17 +4,23 @@ import csv
 import time
 import random
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
+import re
 
 
 def transform_url(original_url):
     """Transform the given URL to the desired format."""
     if not original_url:
+        print(f"Checkpoint 1: URL empty.")
         return None
+    else:
+        print(f"Checkpoint 1: Good")
 
     # Ensure the URL has a scheme
     if not original_url.startswith(('http://', 'https://')):
-        print(f"Invalid URL scheme: {original_url}")
+        print(f"Checkpoint 2: Invalid URL scheme: {original_url}")
         return None
+    else:
+        print(f"Checkpoint 2: Good")
 
     # Parse the original URL
     parsed_url = urlparse(original_url)
@@ -57,8 +63,10 @@ def scrape_profile(url):
 
     # Check if the URL is empty
     if not url:
-        print(f"No data for {url} found.")
+        print(f"Checkpoint 3: No data for {url} found.")
         return None, None, None, None, None, None, None, None, None, None
+    else:
+        print(f"Checkpoint 3: Good")
 
     # Set the headers for the request
     headers = {
@@ -77,9 +85,10 @@ def scrape_profile(url):
         name = doc.find(id="gsc_prf_in")
         if name:
             name = name.string
+            print(f"Checkpoint 4: Good")
         else:
             name = "Unknown"
-            print(f"No data for {url} found: Name not found.")
+            print(f"Checkpoint 4: No data for {url} found: Name not found.")
 
         # Find where h_index values are located
         # Extract the h_index values
@@ -89,9 +98,11 @@ def scrape_profile(url):
             td_elements = parent.find_all('td')
             h_index_all = td_elements[-2].get_text(strip=True)
             h_index_since_input_year = td_elements[-1].get_text(strip=True)
+            print(f"Checkpoint 5: Good")
         else:
             h_index_all = h_index_since_input_year = None
-            print(f"No data for {url} found: H-Index values not found.")
+            print(
+                f"Checkpoint 5: No data for {url} found: H-Index values not found.")
 
         article_urls = []
         base_url = 'https://scholar.google.ca'
@@ -110,19 +121,23 @@ def scrape_profile(url):
 
         # Find the parent element
         parent_element = doc.find(id='gsc_a_b')
+        # parent_element = doc.find(id='gsc_a_b')
+        # print("\n\n",parent_element.prettify(),"\n\n")
 
         if parent_element:
             # Iterate over all children with id 'gsc_a_tr'
-            children = parent_element.find_all(id='gsc_a_tr')
+            children = parent_element.find_all(class_='gsc_a_tr')
+            # print("\n\n", children,"\n\n")
 
             for child in children:
                 # Find all grandchildren with id 'gsc_a_t' within each child
-                grandchildren = child.find_all(id='gsc_a_t')
+                grandchildren = child.find_all(class_='gsc_a_t')
+                # print("\n\n", grandchildren, "\n\n")
 
                 for grandchild in grandchildren:
                     # Find all links within the grandchild
                     articles = grandchild.find_all('a', href=True)
-                    print("\n\n", articles)
+                    # print("\n\n", articles, "\n\n")
 
                     for article in articles:
                         href = article['href']
@@ -133,6 +148,12 @@ def scrape_profile(url):
                             article_urls.append(href)
 
         # print(article_urls)
+
+        if article_urls:
+            print(f"Checkpoint 6: Good")
+        else:
+            print(f"Checkpoint 6: No data for article urls found.")
+
         # article_urls.append(
         #     "https://scholar.google.ca/citations?view_op=view_citation&hl=en&user=WUlj9lsAAAAJ&sortby=pubdate&citation_for_view=WUlj9lsAAAAJ:uLbwQdceFCQC")
 
@@ -150,23 +171,27 @@ def scrape_profile(url):
 
             # Rate limit to avoid hitting the server too quickly
             time.sleep(2)
+            # print("BEFORE: ", citation_count, peer_reviewed, preprint, books, book_chapters, conference_papers, patents)
 
             citation_count, peer_reviewed, preprint, books, book_chapters, conference_papers, patents = scrape_article(
-                article_url)
-
+                article_url, citation_count, peer_reviewed, preprint, books, book_chapters, conference_papers, patents)
+        print(f"Checkpoint 4: Good")
         return name, citation_count, h_index_since_input_year, h_index_all, peer_reviewed, preprint, books, book_chapters, conference_papers, patents
     except requests.RequestException as e:
-        print(f"Error fetching data from URL: {e}")
+        print(f"Checkpoint 4: Error fetching data from URL: {e}")
         return None, None, None, None, None, None, None, None, None, None
 
 
-def scrape_article(url):
+def scrape_article(url, citation_count, peer_reviewed, preprint, books, book_chapters, conference_papers, patents):
     """Function to scrape an article"""
 
+    # print("INSIDE: ", citation_count, peer_reviewed, preprint, books, book_chapters, conference_papers, patents)
     # Check if the URL is empty
     if not url:
-        print(f"No data for {url} found.")
-        return None, None, None, None, None, None, None
+        print(f"Checkpoint 7: No data for {url} found.")
+        return citation_count, peer_reviewed, preprint, books, book_chapters, conference_papers, patents
+    else:
+        print(f"Checkpoint 7: Good")
 
     # Set the headers for the request
     headers = {
@@ -194,46 +219,61 @@ def scrape_article(url):
                 break
         if date is not None and date.count('/') == 2:
             year, month, day = date.split('/')
+            print(f"Checkpoint 9: Good")
         else:
-            print(f"\n\nNo data for {url} found: Publication date not found.")
-            return None, None, None, None, None, None, None
+            print(
+                f"Checkpoint 9: No data for {url} found: Publication date not found.")
+            return citation_count, peer_reviewed, preprint, books, book_chapters, conference_papers, patents
 
         year = int(year)
         month = int(month)
 
         # Check if the article is within the specified year
         if not (year == input_year and month >= 5 or year == input_year+1 and month < 5):
-            return None, None, None, None, None, None, None
+            return citation_count, peer_reviewed, preprint, books, book_chapters, conference_papers, patents
 
-        citation_count = 0
-        peer_reviewed = 0
-        preprint = 0
-        books = 0
-        book_chapters = 0
-        conference_papers = 0
-        patents = 0
+        # citation_count = 0
+        # peer_reviewed = 0
+        # preprint = 0
+        # books = 0
+        # book_chapters = 0
+        # conference_papers = 0
+        # patents = 0
 
         # Iterate over fields and values
         for field, value in zip(fields, values):
 
             # Get the text and convert to lowercase
-            articleType = field.string.lower()
+            articleType = field.string.lower().strip()
+            print("\n\n", "..", articleType, "..", "journal", "..",
+                  articleType == "journal", "..", peer_reviewed, "\n\n")
 
-            if articleType == 'total citations':
-                # count=value.string
-                count = 0
+            if articleType == 'total citations' and value.string:
+                # print("\n\n",field,"\n\n",value,"\n\n")
+                # print(value.string)
+                # Use regex to find the number after "Cited by"
+                match = re.search(r'Cited by (\d+)', value.string)
+
+                if match:
+                    cited_by_number = match.group(1)
+                    print("Checkpoint 10: Good")
+                else:
+                    print("Checkpoint 10: No 'Cited by' number found.")
+
+                citation_count += int(cited_by_number)
                 # citation_count+=
 
             # Increment counters based on article type (can be multiple but not preprint and journal)
-            if articleType == 'preprint':
+            if articleType == 'preprint':  # FIX (SHOULD BE FULL NAME)
                 preprint += 1
                 # print(articleType, preprint)
 
-            elif articleType == 'journal':
+            elif articleType == 'journal' or 'source':
                 peer_reviewed += 1
+                # print(peer_reviewed)
                 # print("\n\n", articleType, peer_reviewed, "\n\n")
 
-            if articleType == 'conference':
+            if articleType == 'conference' or articleType == 'preceeding' or articleType == 'workshop' or articleType == 'meeting':
                 conference_papers += 1
                 # print(articleType, conference_papers)
 
@@ -249,10 +289,12 @@ def scrape_article(url):
                 patents += 1
                 # print(articleType, patents)
 
+        print(f"Checkpoint 8: Good")
+
         return citation_count, peer_reviewed, preprint, books, book_chapters, conference_papers, patents
 
     except requests.RequestException as e:
-        print(f"Error fetching data from URL: {e}")
+        print(f"Checkpoint 8: Error fetching data from URL: {e}")
         return None, None, None, None, None, None, None
 
 
