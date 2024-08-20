@@ -32,12 +32,12 @@ Ensure that you are able to activate Python enviornments (see Troubleshooting fo
    Mac:
    python -m venv venv
    source venv/bin/activate
-   pip install -r requirements.txt
+   pip install beautifulsoup4 requests
 
    Windows:
    python -m venv venv
    venv\Scripts\activate
-   pip install -r requirements.txt
+   pip install beautifulsoup4 requests
 
 4. **Running the script**:
    Run the following commands by pasting them into the terminal:
