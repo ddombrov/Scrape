@@ -226,6 +226,8 @@ def scrape_article(url, counters):
 
         for field, value in zip(fields, values):
             article_field = field.string.lower().strip()
+            
+            found_something=False
 
             if 'total citations' in article_field and value.string:
                 match = re.search(r'Cited by (\d+)', value.string)
@@ -238,15 +240,19 @@ def scrape_article(url, counters):
 
             elif 'preprint' in value:
                 counters['arXiv Preprint'] += 1
+                found_something=True
 
             elif article_field == 'journal' and 'preprint' not in value:
                 counters['Peer Reviewed Articles'] += 1
+                found_something=True
 
             elif 'conference' in article_field or 'preceeding' in article_field or 'workshop' in article_field or 'meeting' in article_field:
                 counters['Conference Papers'] += 1
+                found_something=True
 
             elif article_field == 'book':
                 counters['Books'] += 1
+                found_something=True
                 
                 # Check if the next field is 'book chapter' and has pages
                 next_field_index = fields.index(field) + 1
@@ -259,15 +265,20 @@ def scrape_article(url, counters):
                     if ['book chapter', 'pages'] in next_article_field and next_value.string:
                         counters['Book Chapters'] += 1
                         counters['Books'] -= 1
+                        found_something=True
 
             elif 'patent' in article_field:
                 counters['Patent'] += 1
+                found_something=True
 
-            elif article_field == 'publication date' or article_field == 'authors' or article_field == 'description' or article_field == 'scholar articles' or article_field == 'publisher' or article_field == 'volume' or article_field == 'source':
+            elif article_field == 'publication date' or article_field == 'authors' or article_field == 'description' or article_field == 'scholar articles' or article_field == 'publisher' or article_field == 'volume':
                 continue
 
             else:
                 print(f"Manual inspection required for {article_field}.")
+                
+            if found_something==False:
+                print(f"Manual inspection required for {article field}.")
 
         print(f"Checkpoint 8: Good. (article done)")
         return counters, True
