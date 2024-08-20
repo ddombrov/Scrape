@@ -237,7 +237,9 @@ def scrape_article(url, citation_count, peer_reviewed, preprint, books, book_cha
 
             # Get the text and convert to lowercase
             articleField = field.string.lower().strip()
-            articleValue = value.string.lower().strip()
+            
+            if articleValue:
+                articleValue = value.string.lower().strip()
 
             if articleField == 'total citations' and value.string:
                 # print("\n\n",field,"\n\n",value,"\n\n")
