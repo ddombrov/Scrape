@@ -65,6 +65,8 @@ def scrape_profile(url):
     if not url:
         print(f"Checkpoint 3: No data for {url} found.")
         return None
+    else:
+        print(f"Checkpoint 3: Good")
 
     # Set the headers for the request
     headers = {
@@ -82,7 +84,13 @@ def scrape_profile(url):
 
         # Find the name of the Google Scholar
         name = doc.find(id="gsc_prf_in")
-        profile_data['Full Name'] = name.string if name else "Unknown"
+
+        if name:
+            profile_data['Full Name'] = name.string
+            print(f"Checkpoint 4: Good")
+        else:
+            profile_data['Full Name'] = "Unknown"
+            print(f"Checkpoint 4: No data for {url} found: Name not found.")
 
         # Extract h-index values
         h_index = doc.find_all(string="h-index")
@@ -113,6 +121,11 @@ def scrape_profile(url):
                         if href:
                             article_urls.append(href)
 
+        if article_urls:
+            print(f"Checkpoint 6: Good")
+        else:
+            print(f"Checkpoint 6: No data for article urls found.")
+
         # Initialize counters
         counters = {
             'Citation Count': 0,
@@ -123,15 +136,15 @@ def scrape_profile(url):
             'Conference Papers': 0,
             'Patent': 0
         }
-        i=0
+        i = 0
 
         # Process each article URL
         for article_url in article_urls:
             time.sleep(2)  # Rate limit
-            i+=1
-            print(counters,"\n",i, "\n\n")
+            i += 1
+
             counters = scrape_article(article_url, counters)
-            print(counters, "\n\n")
+            print(counters, "\n", i, "\n\n")
 
         # Add total citations to profile data
         profile_data['Total Citations'] = counters['Citation Count']
@@ -139,6 +152,8 @@ def scrape_profile(url):
         # Add the counters to the profile data
         for key, value in counters.items():
             profile_data[key] = value
+
+        print(f"Checkpoint 4: Good")
 
         return profile_data
 
@@ -153,6 +168,8 @@ def scrape_article(url, counters):
     if not url:
         print(f"Checkpoint 7: No data for {url} found.")
         return counters
+    else:
+        print(f"Checkpoint 7: Good")
 
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -176,11 +193,18 @@ def scrape_article(url, counters):
             year, month, day = date.split('/')
             year = int(year)
             month = int(month)
+            print(f"Checkpoint 9: Good")
+
         else:
+            print(
+                f"Checkpoint 9: No data for {url} found: Publication date not found.")
             return counters
 
         if not (year == input_year and month >= 5 or year == input_year + 1 and month < 5):
+            print(
+                f"Checkpoint 10: No data for {url} found: Publication date is before {input_year}.")
             return counters
+        print(f"Checkpoint 10: Good")
 
         for field, value in zip(fields, values):
             articleField = field.string.lower().strip()
@@ -190,6 +214,9 @@ def scrape_article(url, counters):
                 if match:
                     cited_by_number = match.group(1)
                     counters['Citation Count'] += int(cited_by_number)
+                    print("Checkpoint 11: Good")
+                else:
+                    print("Checkpoint 11: No 'Cited by' number found.")
 
             elif 'preprint' in value:
                 counters['arXiv Preprint'] += 1
@@ -197,18 +224,25 @@ def scrape_article(url, counters):
             elif articleField == 'journal' and 'preprint' not in value:
                 counters['Peer Reviewed Articles'] += 1
 
-            elif 'conference' in articleField:
+            elif 'conference' in articleField or 'preceeding' in articleField or 'workshop' in articleField or 'meeting' in articleField:
                 counters['Conference Papers'] += 1
 
             elif articleField == 'book':
                 counters['Books'] += 1
 
-            elif articleField == 'book chapter':
+            elif articleField == 'book chapter' or articleField == 'pages':
                 counters['Book Chapters'] += 1
 
             elif 'patent' in articleField:
                 counters['Patent'] += 1
 
+            elif articleField == 'publication date' or articleField == 'authors' or articleField == 'description' or articleField == 'scholar articles' or articleField == 'publisher':
+                continue
+
+            else:
+                print(f"Manual inspection required.")
+
+        print(f"Checkpoint 8: Good")
         return counters
 
     except requests.RequestException as e:
@@ -238,7 +272,13 @@ def process_urls(input_file, output_file):
             f'Book Chapters {input_year}',
             f'Conference Papers {input_year}',
             f'Patent {input_year}',
-            'Total Citations'
+            'Total Citations', 
+            f'Average Citations per Researcher in {input_year}',
+            f'Average H-Index Since {since_input_year} per Researcher',
+            'Average Overall H-Index',
+            'Total Peer Reviewed Articles',
+            'Average Peer Reviewed Publications per Researcher',
+            'Total Conference Papers'
         ])
 
         # Process each URL
@@ -270,4 +310,3 @@ input_year = 2023  # Year to extract (ex. put 2023 for May 2023 - April 2024)
 
 # Run the process
 process_urls(input_file, output_file)
-
