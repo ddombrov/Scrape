@@ -232,23 +232,14 @@ def scrape_article(url, citation_count, peer_reviewed, preprint, books, book_cha
         if not (year == input_year and month >= 5 or year == input_year+1 and month < 5):
             return citation_count, peer_reviewed, preprint, books, book_chapters, conference_papers, patents
 
-        # citation_count = 0
-        # peer_reviewed = 0
-        # preprint = 0
-        # books = 0
-        # book_chapters = 0
-        # conference_papers = 0
-        # patents = 0
-
         # Iterate over fields and values
         for field, value in zip(fields, values):
 
             # Get the text and convert to lowercase
-            articleType = field.string.lower().strip()
-            print("\n\n", "..", articleType, "..", "journal", "..",
-                  articleType == "journal", "..", peer_reviewed, "\n\n")
+            articleField = field.string.lower().strip()
+            articleValue = value.string.lower().strip()
 
-            if articleType == 'total citations' and value.string:
+            if articleField == 'total citations' and value.string:
                 # print("\n\n",field,"\n\n",value,"\n\n")
                 # print(value.string)
                 # Use regex to find the number after "Cited by"
@@ -261,33 +252,38 @@ def scrape_article(url, citation_count, peer_reviewed, preprint, books, book_cha
                     print("Checkpoint 10: No 'Cited by' number found.")
 
                 citation_count += int(cited_by_number)
-                # citation_count+=
 
             # Increment counters based on article type (can be multiple but not preprint and journal)
-            if articleType == 'preprint':  # FIX (SHOULD BE FULL NAME)
+            elif 'preprint' in articleValue:
                 preprint += 1
-                # print(articleType, preprint)
+                # print(articleField, preprint)
 
-            elif articleType == 'journal' or 'source':
+            elif articleField == 'journal' and 'preprint' not in articleValue:
                 peer_reviewed += 1
                 # print(peer_reviewed)
-                # print("\n\n", articleType, peer_reviewed, "\n\n")
+                # print("\n\n", articleField, peer_reviewed, "\n\n")
 
-            if articleType == 'conference' or articleType == 'preceeding' or articleType == 'workshop' or articleType == 'meeting':
+            elif articleField == 'conference' or articleField == 'preceeding' or articleField == 'workshop' in articleField or 'meeting' in articleField or 'conference' in articleField or 'preceeding' in articleField or 'workshop' in articleField or 'meeting' in articleField:
                 conference_papers += 1
-                # print(articleType, conference_papers)
+                # print(articleField, conference_papers)
 
-            if articleType == 'book':
+            elif articleField == 'book':
                 books += 1
-                # print(articleType, books)
+                # print(articleField, books)
 
-            if articleType == 'book chapter' or articleType == 'pages':
+            elif articleField == 'book chapter' or articleField == 'pages':
                 book_chapters += 1
-                # print(articleType, book_chapters)
+                # print(articleField, book_chapters)
 
-            if articleType == 'patent' or articleType == 'patent office':
+            elif articleField == 'patent' or articleField == 'patent office':
                 patents += 1
-                # print(articleType, patents)
+                # print(articleField, patents)
+
+            elif articleField == 'publication date' or articleField == 'authors' or articleField == 'description' or articleField == 'scholar articles' or articleField == 'publisher':
+                continue
+            
+            else:
+                print(f"Manual inspection required.")
 
         print(f"Checkpoint 8: Good")
 
