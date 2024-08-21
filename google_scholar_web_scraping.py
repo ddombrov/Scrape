@@ -277,17 +277,21 @@ def scrape_article(url, counters):
 
             if value and any(keyword in str(value) for keyword in preprint_keywords):
                 counters['arXiv Preprint'] += 1
+                continue
 
             # Handle journal-related keywords
             if any(keyword in article_field for keyword in journal_keywords) and 'preprint' not in str(value):
                 counters['Peer Reviewed Articles'] += 1
+                continue
 
             # Handle conference-related keywords
             if any(keyword in article_field for keyword in conference_keywords) or (value and any(keyword in str(value) for keyword in conference_keywords)):
                 counters['Conference Papers'] += 1
+                continue
 
             if any(keyword in article_field for keyword in book_keywords):
                 counters['Books'] += 1
+                
 
                 # Check if the next field is 'book chapter' and has pages
                 next_field_index = fields.index(field) + 1
@@ -299,9 +303,11 @@ def scrape_article(url, counters):
                     if 'book chapter' in next_article_field and str(next_value):
                         counters['Book Chapters'] += 1
                         counters['Books'] -= 1
+                continue
 
             if any(keyword in article_field for keyword in patent_keywords):
                 counters['Patent'] += 1
+                continue
 
             # Check for ignored fields
             if any(ignored_keyword in article_field for ignored_keyword in ignored_keywords):
