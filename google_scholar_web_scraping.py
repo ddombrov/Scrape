@@ -266,8 +266,8 @@ def scrape_article(url, counters):
             article_field = field.string.lower().strip()
 
             if any(keyword in article_field for keyword in citations_keywords):
-                if value.string:
-                    match = re.search(r'Cited by (\d+)', value.string)
+                if value:
+                    match = re.search(r'Cited by (\d+)', str(value))
                     if match:
                         cited_by_number = match.group(1)
                         counters['Citation Count'] += int(cited_by_number)
@@ -275,20 +275,16 @@ def scrape_article(url, counters):
                     else:
                         print("Checkpoint 12: No 'Cited by' number found.")
 
-            if any(keyword in value for keyword in preprint_keywords):
+            if value and any(keyword in str(value) for keyword in preprint_keywords):
                 counters['arXiv Preprint'] += 1
 
             # Handle journal-related keywords
-            if any(keyword in article_field for keyword in journal_keywords) and 'preprint' not in value:
+            if any(keyword in article_field for keyword in journal_keywords) and 'preprint' not in str(value):
                 counters['Peer Reviewed Articles'] += 1
 
             # Handle conference-related keywords
-            if any(keyword in article_field for keyword in conference_keywords) or any(keyword in value for keyword in conference_keywords):
+            if any(keyword in article_field for keyword in conference_keywords) or (value and any(keyword in str(value) for keyword in conference_keywords)):
                 counters['Conference Papers'] += 1
-
-            else:
-                if article_field == 'journal':
-                    print(f"field: {article_field, value}")
 
             if any(keyword in article_field for keyword in book_keywords):
                 counters['Books'] += 1
@@ -300,7 +296,7 @@ def scrape_article(url, counters):
                     ).strip()
                     next_value = values[next_field_index]
 
-                    if 'book chapter' in next_article_field and next_value.string:
+                    if 'book chapter' in next_article_field and str(next_value):
                         counters['Book Chapters'] += 1
                         counters['Books'] -= 1
 
@@ -313,7 +309,7 @@ def scrape_article(url, counters):
 
             # Handle cases that don't match any known keyword
             if not (any(keyword in article_field for keyword in (citations_keywords | preprint_keywords | journal_keywords | conference_keywords | book_keywords | patent_keywords)) or
-                    any(keyword in value for keyword in (conference_keywords | preprint_keywords))):
+                    any(keyword in str(value) for keyword in (conference_keywords | preprint_keywords))):
                 print(f"Manual inspection required for {article_field}.")
 
         if counters == old_counters:
