@@ -11,7 +11,8 @@ def transform_url(original_url):
     """Transform the given URL to the desired format."""
 
     if not original_url or not original_url.startswith(('http://', 'https://')):
-        print(f"PROFILE:\nCheckpoint 1: URL empty or Invalid URL scheme: {original_url}")
+        print(
+            f"PROFILE:\nCheckpoint 1: URL empty or Invalid URL scheme: {original_url}")
         return None
     else:
         print(f"PROFILE:\nCheckpoint 1: Good (valid profile url)")
@@ -97,7 +98,8 @@ def scrape_profile(url):
                 strip=True)
             print(f"Checkpoint 3: Good (h-indices found)")
         else:
-            print(f"Checkpoint 3: No data for {url} found: H-indices not found.")
+            print(
+                f"Checkpoint 3: No data for {url} found: H-indices not found.")
             profile_data['H-Index Overall'] = profile_data['H-Index Since'] = None
 
         # Extract article URLs
@@ -236,10 +238,10 @@ def scrape_article(url, counters):
         ignored_keywords = {
             'publication date', 'publication dates', 'authors', 'author',
             'descriptions', 'description', 'scholar articles', 'publisher',
-            'publishers', 'volume', 'volumes', 'pages',
+            'publishers', 'volume', 'volumes', 'page', 'pages', 'issue', 'issues'
             'Publication Date', 'Publication Dates', 'Authors', 'Author',
             'Descriptions', 'Description', 'Scholar Articles', 'Publisher',
-            'Publishers', 'Volume', 'Volumes', 'Pages'
+            'Publishers', 'Volume', 'Volumes', 'Page', 'Pages', 'Issue', 'Issues'
         }
 
         citations_keywords = {
@@ -298,7 +300,6 @@ def scrape_article(url, counters):
 
             if any(keyword in article_field for keyword in book_keywords):
                 counters['Books'] += 1
-                
 
                 # Check if the next field is 'book chapter' and has pages
                 next_field_index = fields.index(field) + 1
@@ -323,12 +324,13 @@ def scrape_article(url, counters):
             # Handle cases that don't match any known keyword
             if not (any(keyword in article_field for keyword in (citations_keywords | preprint_keywords | journal_keywords | conference_keywords | book_keywords | patent_keywords)) or
                     any(keyword in str(value) for keyword in (conference_keywords | preprint_keywords))):
-                print(f"\nMANUAL INSPECTION REQUIRED:\n{url}\nUnknown article_field: {article_field}.")
+                print(
+                    f"\nMANUAL INSPECTION REQUIRED:\n{url}\nUnknown article_field: {article_field}.")
 
         if counters == old_counters:
             print(f"\nMANUAL INSPECTION REQUIRED:\n{url}\nNo counts updated.")
         else:
-            print("UPDATED VALUES: "counters, "\n")
+            print("UPDATED VALUES: ", counters, "\n")
 
         print(f"Checkpoint 7: Good (article done)")
         return counters, True
