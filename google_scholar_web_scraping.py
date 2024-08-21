@@ -220,18 +220,18 @@ def scrape_article(url, counters):
 
         # Define keyword sets with singular, plural, and title case forms
         conference_keywords = {
-            'conference', 'conferences', 'preceeding', 'preceedings', 
+            'conference', 'conferences', 'proceeding', 'proceedings',
             'workshop', 'workshops', 'meeting', 'meetings',
-            'Conference', 'Conferences', 'Preceeding', 'Preceedings', 
+            'Conference', 'Conferences', 'Proceeding', 'Proceedings',
             'Workshop', 'Workshops', 'Meeting', 'Meetings'
         }
 
         ignored_keywords = {
-            'publication date', 'publication dates', 'authors', 'author', 
-            'descriptions', 'description', 'scholar articles', 'publisher', 
+            'publication date', 'publication dates', 'authors', 'author',
+            'descriptions', 'description', 'scholar articles', 'publisher',
             'publishers', 'volume', 'volumes', 'pages',
-            'Publication Date', 'Publication Dates', 'Authors', 'Author', 
-            'Descriptions', 'Description', 'Scholar Articles', 'Publisher', 
+            'Publication Date', 'Publication Dates', 'Authors', 'Author',
+            'Descriptions', 'Description', 'Scholar Articles', 'Publisher',
             'Publishers', 'Volume', 'Volumes', 'Pages'
         }
 
@@ -256,7 +256,7 @@ def scrape_article(url, counters):
         }
 
         patent_keywords = {
-            'patent', 'patents', 
+            'patent', 'patents',
             'Patent', 'Patents'
         }
 
@@ -286,6 +286,9 @@ def scrape_article(url, counters):
             if any(keyword in article_field for keyword in conference_keywords) or any(keyword in value for keyword in conference_keywords):
                 counters['Conference Papers'] += 1
 
+            else:
+                if article_field == 'journal':
+                    print(f"field: {article_field, value}")
 
             if any(keyword in article_field for keyword in book_keywords):
                 counters['Books'] += 1
@@ -293,13 +296,13 @@ def scrape_article(url, counters):
                 # Check if the next field is 'book chapter' and has pages
                 next_field_index = fields.index(field) + 1
                 if next_field_index < len(fields):
-                    next_article_field = fields[next_field_index].string.lower().strip()
+                    next_article_field = fields[next_field_index].string.lower(
+                    ).strip()
                     next_value = values[next_field_index]
 
                     if 'book chapter' in next_article_field and next_value.string:
                         counters['Book Chapters'] += 1
                         counters['Books'] -= 1
-
 
             if any(keyword in article_field for keyword in patent_keywords):
                 counters['Patent'] += 1
@@ -309,7 +312,7 @@ def scrape_article(url, counters):
                 continue
 
             # Handle cases that don't match any known keyword
-            if not (any(keyword in article_field for keyword in (citations_keywords | preprint_keywords | journal_keywords | conference_keywords | book_keywords | patent_keywords)) or 
+            if not (any(keyword in article_field for keyword in (citations_keywords | preprint_keywords | journal_keywords | conference_keywords | book_keywords | patent_keywords)) or
                     any(keyword in value for keyword in (conference_keywords | preprint_keywords))):
                 print(f"Manual inspection required for {article_field}.")
 
