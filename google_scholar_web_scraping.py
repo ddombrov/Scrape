@@ -12,10 +12,10 @@ def transform_url(original_url):
 
     if not original_url or not original_url.startswith(('http://', 'https://')):
         print(
-            f"PROFILE:\nCheckpoint 1: Invalid URL scheme: Bad\nProblematic URL:\n \"{original_url}\"")
+            f"\nPROFILE:\nCheckpoint 1: Invalid URL scheme: Bad\nProblematic URL:\n \"{original_url}\"")
         return None
     else:
-        print(f"PROFILE:\nCheckpoint 1: Valid URL scheme:\t\t\t\t\t\t\t\t\tGood")
+        print(f"\nPROFILE:\nCheckpoint 1: Valid URL scheme:\t\t\t\t\t\t\t\t\tGood")
 
     # Parse the original URL
     parsed_url = urlparse(original_url)
@@ -99,7 +99,7 @@ def scrape_profile(url):
             profile_data['H-Index Since'] = td_elements[-1].get_text(
                 strip=True)
             print(f"Checkpoint 4: H-indices found:\t\t\t\t\t\t\t\t\tGood")
-                  
+
         else:
             print(
                 f"Checkpoint 4: H-indices not found: Bad\nProblematic URL:\n \"{url}\"")
@@ -125,7 +125,8 @@ def scrape_profile(url):
         if article_urls:
             print(f"Checkpoint 5: Article url data found:\t\t\t\t\t\t\tGood")
         else:
-            print(f"Checkpoint 5: Article url data not found: Bad\nProblematic URL:\n \"{url}\"")
+            print(
+                f"Checkpoint 5: Article url data not found: Bad\nProblematic URL:\n \"{url}\"")
 
         # Initialize counters
         counters = {
@@ -143,15 +144,44 @@ def scrape_profile(url):
         for article_url in article_urls:
             time.sleep(2)  # Rate limit
             i += 1
-            keepGoing = True
+            keepGoing = 1
+            old_counters = counters.copy()
             counters, keepGoing = scrape_article(article_url, counters)
-
-            if keepGoing == False:
-                break
             
-            if keepGoing == True and i == 20:
-                printf(f"MANUAL INSPECTION REQUIRED:\nMore than 20 articles found: Bad\nProblematic URL:\n{url}\n")
+            if counters == old_counters:
+                print(
+                    f"\nMANUAL INSPECTION REQUIRED:\nNo counts updated: Bad\nProblematic URL:\n{url}\n")
 
+            #keepGoing 0 = Do not keep going
+            #keepGoing 1 = Do keep going
+            #keepGoing 2 = Date format invalid
+            #keepGoing 3 = Error fetching data from article
+            #keepGoing 4 = Unrecognized article_field
+            #keepGoing 5 = No 'Cited by' number found
+
+            if keepGoing == 0:
+                break
+
+            if keepGoing == 1 and i == 20:
+                print(
+                    f"MANUAL INSPECTION REQUIRED:\nMore than 20 articles found: Bad\nProblematic URL:\n{url}\n")
+
+            if keepGoing == 2:
+                print(
+                    f"MANUAL INSPECTION REQUIRED:\nDate format invalid: Bad\nProblematic URL:\n{url}\n")
+                
+            if keepGoing == 3:
+                print(
+                    f"MANUAL INSPECTION REQUIRED:\nError fetching data from article: Bad\nProblematic URL:\n{url}\n")
+                
+            if keepGoing == 4:
+                print(
+                    f"MANUAL INSPECTION REQUIRED:\nUnrecognized article_field: Bad\nProblematic URL:\n{url}\n")
+                
+            if keepGoing == 5:
+                print(
+                    f"MANUAL INSPECTION REQUIRED:\nNo 'Cited by' number found: Bad\nProblematic URL:\n{url}\n")
+                
         # Add total citations to profile data
         profile_data['Total Citations'] = counters['Citation Count']
 
@@ -159,7 +189,7 @@ def scrape_profile(url):
         for key, value in counters.items():
             profile_data[key] = value
 
-        print(f"\n\nCheckpoint 6: Profile and articles were scraped successfully:\tGood\n")
+        print(f"\nCheckpoint 6: Returned after scraping from profile:\tGood\n")
 
         return profile_data
 
@@ -173,8 +203,9 @@ def scrape_article(url, counters):
     """Function to scrape an article"""
 
     if not url:
-        print(f"\nARTICLE:\nCheckpoint 7: No data for the article url found: Bad\nProblematic URL:\n \"{url}\"")
-        return counters, True
+        print(
+            f"\nARTICLE:\nCheckpoint 7: No data for the article url found: Bad\nProblematic URL:\n \"{url}\"")
+        return counters, 1
     else:
         print(f"\nARTICLE:\nCheckpoint 7: Data found for the article url:\t\t\t\t\tGood")
 
@@ -211,28 +242,30 @@ def scrape_article(url, counters):
             else:
                 print(
                     f"\nMANUAL INSPECTION REQUIRED:\nCheckpoint 10: Date has invalid format: Bad\nProblematic URL:\n {url}\n")
-                return counters, True
+                return counters, 2
 
         else:
             print(
                 f"Checkpoint 9: No date found: Bad\nProblematic URL:\n \"{url}\"")
-            return counters, True
+            return counters, 2
 
         # Check if the publication date is before the input year
         if (year < input_year or (year == input_year and month < 5)):
             print(
                 f"Checkpoint 11: Publication date is before May {input_year}:\t\t\t\tArticle skipped")
-            return counters, False
+            return counters, 0
 
-        print(f"Checkpoint 11: Publication date is after May {input_year}:\t\t\t\tArticle accepted")
+        print(
+            f"Checkpoint 11: Publication date is after May {input_year}:\t\t\t\tArticle accepted")
 
         # Check if the publication date is in the correct range
         if not (year == input_year and month >= 5 or year == input_year + 1 and month < 5):
             print(
                 f"Checkpoint 12: Publication date is not in the correct range:\tArticle skipped")
-            return counters, True
+            return counters, 1
 
-        print(f"Checkpoint 12: Publication date is in the correct range:\t\tArticle accepted")
+        print(
+            f"Checkpoint 12: Publication date is in the correct range:\t\tArticle accepted")
 
         # Define keyword sets with singular, plural, and title case forms
         conference_keywords = {
@@ -276,7 +309,7 @@ def scrape_article(url, counters):
             'Patent', 'Patents'
         }
 
-        old_counters = counters.copy()
+        
 
         for field, value in zip(fields, values):
             article_field = field.string.lower().strip()
@@ -287,9 +320,12 @@ def scrape_article(url, counters):
                     if match:
                         cited_by_number = match.group(1)
                         counters['Citation Count'] += int(cited_by_number)
-                        print("Checkpoint 13: 'Cited by' number found:\t\t\t\t\t\t\tGood")
+                        print(
+                            "Checkpoint 13: 'Cited by' number found:\t\t\t\t\t\t\tGood")
                     else:
-                        print("Checkpoint 13: No 'Cited by' number found: Bad\nProblematic URL:\n \"{url}\"")
+                        print(
+                            "Checkpoint 13: No 'Cited by' number found: Bad\nProblematic URL:\n \"{url}\"")
+                        return counters, 5
 
             if value and any(keyword in str(value) for keyword in preprint_keywords):
                 counters['arXiv Preprint'] += 1
@@ -332,19 +368,16 @@ def scrape_article(url, counters):
             if not (any(keyword in article_field for keyword in (citations_keywords | preprint_keywords | journal_keywords | conference_keywords | book_keywords | patent_keywords)) or
                     any(keyword in str(value) for keyword in (conference_keywords | preprint_keywords))):
                 print(
-                    f"\nMANUAL INSPECTION REQUIRED:\n{url}\nUnrecognized article_field: Bad\nProblematic URL:\n{url}\n")
-
-        if counters == old_counters:
-            print(f"\nMANUAL INSPECTION REQUIRED:\nNo counts updated: Bad\nProblematic URL:\n{url}\n")
-        # else:
-        #     print("\nUPDATED VALUES:\n", counters, "\n")
+                    f"\nMANUAL INSPECTION REQUIRED:\nUnrecognized article_field: Bad\nProblematic URL:\n{url}\n")
+                return counters, 4
 
         print(f"Checkpoint 8: Article was scraped successfully:\t\t\t\t\tGood")
-        return counters, True
+        return counters, 1
 
     except requests.RequestException as e:
-        print(f"Checkpoint 8: Error fetching data from article: Bad\nProblematic URL:\n \"{e}\"")
-        return counters
+        print(
+            f"Checkpoint 8: Error fetching data from article: Bad\nProblematic URL:\n \"{e}\"")
+        return counters, 3
 
 
 def process_urls(input_file, output_file):
@@ -355,6 +388,7 @@ def process_urls(input_file, output_file):
     # Read the URLs from the input file
     with open(input_file, 'r') as file:
         urls = file.read().splitlines()
+        # print(urls)
 
     # Write the header row to the CSV file
     with open(output_file, 'w', newline='') as csvfile:
@@ -378,8 +412,10 @@ def process_urls(input_file, output_file):
             'Total Conference Papers'
         ])
 
+        # print(urls)
         # Process each URL
         for url in urls:
+            # print(url)
             time.sleep(random.uniform(1, 3))
             profile_data = scrape_profile(url)
 
@@ -400,8 +436,10 @@ def process_urls(input_file, output_file):
                     profile_data.get('Total Citations', '')
                 ])
 
+    print("\n\nPROCESS COMPLETED SUCCESSFULLY\n\n")
 
-input_file = 'test_url.txt'  # File containing list of URLs
+
+input_file = 'urls.txt'  # File containing list of URLs
 output_file = 'output.csv'  # File to save the results
 input_year = 2023  # Year to extract (ex. put 2023 for May 2023 - April 2024)
 
