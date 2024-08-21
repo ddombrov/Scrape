@@ -9,18 +9,12 @@ import re
 
 def transform_url(original_url):
     """Transform the given URL to the desired format."""
-    if not original_url:
-        print(f"Checkpoint 1: URL empty.")
-        return None
-    else:
-        print(f"Checkpoint 1: Good.")
 
-    # Ensure the URL has a scheme
-    if not original_url.startswith(('http://', 'https://')):
-        print(f"Checkpoint 2: Invalid URL scheme: {original_url}")
+    if not original_url or not original_url.startswith(('http://', 'https://')):
+        print(f"Checkpoint 1: URL empty or Invalid URL scheme: {original_url}")
         return None
     else:
-        print(f"Checkpoint 2: Good.")
+        print(f"Checkpoint 1: Good (valid profile url)")
 
     # Parse the original URL
     parsed_url = urlparse(original_url)
@@ -63,10 +57,10 @@ def scrape_profile(url):
 
     # Check if the URL is empty
     if not url:
-        print(f"Checkpoint 3: No data for {url} found.")
+        print(f"Checkpoint 2: No data for {url} found.")
         return None
     else:
-        print(f"Checkpoint 3: Good.")
+        print(f"Checkpoint 2: Good (url not empty)")
 
     # Set the headers for the request
     headers = {
@@ -87,10 +81,10 @@ def scrape_profile(url):
 
         if name:
             profile_data['Full Name'] = name.string
-            print(f"Checkpoint 4: Good.")
+            print(f"Checkpoint 3: Good (name found)")
         else:
             profile_data['Full Name'] = "Unknown"
-            print(f"Checkpoint 4: No data for {url} found: Name not found.")
+            print(f"Checkpoint 3: No data for {url} found: Name not found.")
 
         # Extract h-index values
         h_index = doc.find_all(string="h-index")
@@ -122,9 +116,9 @@ def scrape_profile(url):
                             article_urls.append(href)
 
         if article_urls:
-            print(f"Checkpoint 6: Good. (profile done)")
+            print(f"Checkpoint 5: Good. (profile done)")
         else:
-            print(f"Checkpoint 6: No data for article urls found.")
+            print(f"Checkpoint 5: No data for article urls found.")
 
         # Initialize counters
         counters = {
@@ -144,7 +138,7 @@ def scrape_profile(url):
             i += 1
             keepGoing = True
             counters, keepGoing = scrape_article(article_url, counters)
-            print(counters, "\n", i, "\n\n")
+            # print(counters, "\n", i, "\n\n")
 
             if keepGoing == False:
                 break
@@ -156,7 +150,7 @@ def scrape_profile(url):
         for key, value in counters.items():
             profile_data[key] = value
 
-        print(f"Checkpoint 4: Good.")
+        print(f"\n\nCheckpoint 4: Good (url had content)")
 
         return profile_data
 
@@ -169,10 +163,10 @@ def scrape_article(url, counters):
     """Function to scrape an article"""
 
     if not url:
-        print(f"Checkpoint 7: No data for {url} found.")
+        print(f"Checkpoint 6: No data for {url} found.")
         return counters, True
     else:
-        print(f"Checkpoint 7: Good.")
+        print(f"\n\nCheckpoint 6: Good (article url not empty)")
 
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -193,41 +187,42 @@ def scrape_article(url, counters):
                 break
 
         if date:
-            print(f"Checkpoint 9: Good.")
+            print(f"Checkpoint 8: Good (date not empty)")
             if date.count('/') == 2:
                 year, month, day = date.split('/')
                 year = int(year)
                 month = int(month)
-                print(f"Checkpoint 10: Good.")
+                print(f"Checkpoint 9: Good (date has valid format)")
             else:
                 print(
-                    f"Checkpoint 10: Date has invalid format. Manual inspection required.")
+                    f"Checkpoint 9: Date has invalid format. Manual inspection required.\n{url}")
                 return counters, True
 
         else:
             print(
-                f"Checkpoint 9: No data for {url} found: Publication date not found.")
+                f"Checkpoint 8: No data for {url} found: Publication date not found.")
             return counters, True
 
         # Check if the publication date is before the input year
-        if (year <= input_year and month < 5):
-            print(f"Checkpoint 11: Publication date is before May {input_year}.")
+        if (year < input_year or (year == input_year and month < 5)):
+            print(
+                f"Checkpoint 10: Publication date is before May {input_year}. (article skipped)")
             return counters, False
 
-        print(f"Checkpoint 11: Good.")
+        print(f"Checkpoint 10: Good (date is after May {input_year})")
 
         # Check if the publication date is in the correct range
         if not (year == input_year and month >= 5 or year == input_year + 1 and month < 5):
             print(
-                f"Checkpoint 12: Publication date is not in the correct range. (article skipped)")
+                f"Checkpoint 11: Publication date is not in the correct range. (article skipped)")
             return counters, True
 
-        print(f"Checkpoint 12: Good.")
+        print(f"Checkpoint 11: Good (date is in the correct range)")
 
         for field, value in zip(fields, values):
             article_field = field.string.lower().strip()
-            
-            found_something=False
+
+            found_something = False
 
             if 'total citations' in article_field:
                 if value.string:
@@ -235,57 +230,55 @@ def scrape_article(url, counters):
                     if match:
                         cited_by_number = match.group(1)
                         counters['Citation Count'] += int(cited_by_number)
-                        print("Checkpoint 13: Good.")
+                        print("Checkpoint 12: Good (cited by number found)")
                     else:
-                        print("Checkpoint 13: No 'Cited by' number found.")
-                    
+                        print("Checkpoint 12: No 'Cited by' number found.")
+
             elif 'preprint' in value:
                 counters['arXiv Preprint'] += 1
-                found_something=True
+                found_something = True
 
             elif article_field == 'journal' and 'preprint' not in value:
                 counters['Peer Reviewed Articles'] += 1
-                found_something=True
+                found_something = True
 
             elif 'conference' in article_field or 'preceeding' in article_field or 'workshop' in article_field or 'meeting' in article_field:
                 counters['Conference Papers'] += 1
-                found_something=True
+                found_something = True
 
             elif article_field == 'book':
                 counters['Books'] += 1
-                found_something=True
-                
+                found_something = True
+
                 # Check if the next field is 'book chapter' and has pages
                 next_field_index = fields.index(field) + 1
                 if next_field_index < len(fields):
                     next_article_field = fields[next_field_index].string.lower(
                     ).strip()
                     next_value = values[next_field_index]
-                    
+
                     # Check if the next field is 'book chapter' and has pages
                     if ['book chapter', 'pages'] in next_article_field and next_value.string:
                         counters['Book Chapters'] += 1
                         counters['Books'] -= 1
-                        found_something=True
+                        found_something = True
 
             elif 'patent' in article_field:
                 counters['Patent'] += 1
-                found_something=True
+                found_something = True
 
             elif article_field == 'publication date' or article_field == 'authors' or article_field == 'description' or article_field == 'scholar articles' or article_field == 'publisher' or article_field == 'volume' or article_field == 'pages':
                 continue
 
-            # else:
-            #     print(f"Manual inspection required for {article_field}.")
-                
-            if not found_something:
-                print(f"Manual inspection required for {article_field}.")
+        if not found_something:
+            print(f"Manual inspection required for {url}.")
 
-        print(f"Checkpoint 8: Good. (article done)")
+        print(f"Checkpoint 7: Good (article done)")
+        print(counters, "\n")
         return counters, True
 
     except requests.RequestException as e:
-        print(f"Checkpoint 8: Error fetching data from URL: {e}")
+        print(f"Checkpoint 7: Error fetching data from URL: {e}")
         return counters
 
 
