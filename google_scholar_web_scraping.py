@@ -11,10 +11,10 @@ def transform_url(original_url):
     """Transform the given URL to the desired format."""
 
     if not original_url or not original_url.startswith(('http://', 'https://')):
-        print(f"Checkpoint 1: URL empty or Invalid URL scheme: {original_url}")
+        print(f"PROFILE:\nCheckpoint 1: URL empty or Invalid URL scheme: {original_url}")
         return None
     else:
-        print(f"Checkpoint 1: Good (valid profile url)")
+        print(f"PROFILE:\nCheckpoint 1: Good (valid profile url)")
 
     # Parse the original URL
     parsed_url = urlparse(original_url)
@@ -95,7 +95,9 @@ def scrape_profile(url):
                 strip=True)
             profile_data['H-Index Since'] = td_elements[-1].get_text(
                 strip=True)
+            print(f"Checkpoint 3: Good (h-indices found)")
         else:
+            print(f"Checkpoint 3: No data for {url} found: H-indices not found.")
             profile_data['H-Index Overall'] = profile_data['H-Index Since'] = None
 
         # Extract article URLs
@@ -162,10 +164,10 @@ def scrape_article(url, counters):
     """Function to scrape an article"""
 
     if not url:
-        print(f"Checkpoint 6: No data for {url} found.")
+        print(f"\nARTICLE:\nCheckpoint 6: No data for {url} found.")
         return counters, True
     else:
-        print(f"\n\nCheckpoint 6: Good (article url not empty)")
+        print(f"\nARTICLE:\nCheckpoint 6: Good (article url not empty)")
 
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -192,9 +194,14 @@ def scrape_article(url, counters):
                 year = int(year)
                 month = int(month)
                 print(f"Checkpoint 9: Good (date has valid format)")
+            elif date.count('/') == 1:
+                year, month, = date.split('/')
+                year = int(year)
+                month = int(month)
+                print(f"Checkpoint 9: Good (date has valid format)")
             else:
                 print(
-                    f"Checkpoint 9: Date has invalid format. Manual inspection required.\n{url}")
+                    f"\nMANUAL INSPECTION REQUIRED:\nCheckpoint 9: Date has invalid format.\n{url}")
                 return counters, True
 
         else:
@@ -316,12 +323,12 @@ def scrape_article(url, counters):
             # Handle cases that don't match any known keyword
             if not (any(keyword in article_field for keyword in (citations_keywords | preprint_keywords | journal_keywords | conference_keywords | book_keywords | patent_keywords)) or
                     any(keyword in str(value) for keyword in (conference_keywords | preprint_keywords))):
-                print(f"Manual inspection required for {article_field}.")
+                print(f"\nMANUAL INSPECTION REQUIRED:\n{url}\nUnknown article_field: {article_field}.")
 
         if counters == old_counters:
-            print(f"Manual inspection required for {url} (nothing was found).")
+            print(f"\nMANUAL INSPECTION REQUIRED:\n{url}\nNo counts updated.")
         else:
-            print(counters, "\n")
+            print("UPDATED VALUES: "counters, "\n")
 
         print(f"Checkpoint 7: Good (article done)")
         return counters, True
