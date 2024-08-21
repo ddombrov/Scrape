@@ -138,7 +138,6 @@ def scrape_profile(url):
             i += 1
             keepGoing = True
             counters, keepGoing = scrape_article(article_url, counters)
-            # print(counters, "\n", i, "\n\n")
 
             if keepGoing == False:
                 break
@@ -219,16 +218,54 @@ def scrape_article(url, counters):
 
         print(f"Checkpoint 11: Good (date is in the correct range)")
 
-        conference_keywords = {'conference',
-                               'preceding', 'workshop', 'meeting'}
-        ignored_fields = {'publication date', 'authors', 'description',
-                          'scholar articles', 'publisher', 'volume', 'pages'}
+        # Define keyword sets with singular, plural, and title case forms
+        conference_keywords = {
+            'conference', 'conferences', 'preceeding', 'preceedings', 
+            'workshop', 'workshops', 'meeting', 'meetings',
+            'Conference', 'Conferences', 'Preceeding', 'Preceedings', 
+            'Workshop', 'Workshops', 'Meeting', 'Meetings'
+        }
+
+        ignored_keywords = {
+            'publication date', 'publication dates', 'authors', 'author', 
+            'descriptions', 'description', 'scholar articles', 'publisher', 
+            'publishers', 'volume', 'volumes', 'pages',
+            'Publication Date', 'Publication Dates', 'Authors', 'Author', 
+            'Descriptions', 'Description', 'Scholar Articles', 'Publisher', 
+            'Publishers', 'Volume', 'Volumes', 'Pages'
+        }
+
+        citations_keywords = {
+            'total citations', 'total citation',
+            'Total Citations', 'Total Citation'
+        }
+
+        preprint_keywords = {
+            'preprint', 'preprints', 'arxiv', 'biorxiv', 'medrxiv',
+            'Preprint', 'Preprints', 'Arxiv', 'Biorxiv', 'Medrxiv'
+        }
+
+        journal_keywords = {
+            'journal', 'journals',
+            'Journal', 'Journals'
+        }
+
+        book_keywords = {
+            'book', 'books',
+            'Book', 'Books'
+        }
+
+        patent_keywords = {
+            'patent', 'patents', 
+            'Patent', 'Patents'
+        }
+
         old_counters = counters.copy()
 
         for field, value in zip(fields, values):
             article_field = field.string.lower().strip()
 
-            if 'total citations' in article_field:
+            if any(keyword in article_field for keyword in citations_keywords):
                 if value.string:
                     match = re.search(r'Cited by (\d+)', value.string)
                     if match:
@@ -238,44 +275,50 @@ def scrape_article(url, counters):
                     else:
                         print("Checkpoint 12: No 'Cited by' number found.")
 
-            elif 'preprint' in value:
+            if any(keyword in value for keyword in preprint_keywords):
                 counters['arXiv Preprint'] += 1
 
-            elif article_field == 'journal' and 'preprint' not in value:
+            # Handle journal-related keywords
+            if any(keyword in article_field for keyword in journal_keywords) and 'preprint' not in value:
                 counters['Peer Reviewed Articles'] += 1
 
-            elif any(keyword in article_field for keyword in conference_keywords) or any(keyword in value for keyword in conference_keywords):
+            # Handle conference-related keywords
+            if any(keyword in article_field for keyword in conference_keywords) or any(keyword in value for keyword in conference_keywords):
                 counters['Conference Papers'] += 1
 
-            elif article_field == 'book':
+
+            if any(keyword in article_field for keyword in book_keywords):
                 counters['Books'] += 1
 
                 # Check if the next field is 'book chapter' and has pages
                 next_field_index = fields.index(field) + 1
                 if next_field_index < len(fields):
-                    next_article_field = fields[next_field_index].string.lower(
-                    ).strip()
+                    next_article_field = fields[next_field_index].string.lower().strip()
                     next_value = values[next_field_index]
 
-                    # Check if the next field is 'book chapter' and has pages
-                    if ['book chapter', 'pages'] in next_article_field and next_value.string:
+                    if 'book chapter' in next_article_field and next_value.string:
                         counters['Book Chapters'] += 1
                         counters['Books'] -= 1
 
-            elif 'patent' in article_field:
+
+            if any(keyword in article_field for keyword in patent_keywords):
                 counters['Patent'] += 1
 
-            elif any(ignored_field in article_field for ignored_field in ignored_fields):
+            # Check for ignored fields
+            if any(ignored_keyword in article_field for ignored_keyword in ignored_keywords):
                 continue
 
-            else:
+            # Handle cases that don't match any known keyword
+            if not (any(keyword in article_field for keyword in (citations_keywords | preprint_keywords | journal_keywords | conference_keywords | book_keywords | patent_keywords)) or 
+                    any(keyword in value for keyword in (conference_keywords | preprint_keywords))):
                 print(f"Manual inspection required for {article_field}.")
 
         if counters == old_counters:
             print(f"Manual inspection required for {url} (nothing was found).")
+        else:
+            print(counters, "\n")
 
         print(f"Checkpoint 7: Good (article done)")
-        print(counters, "\n")
         return counters, True
 
     except requests.RequestException as e:
