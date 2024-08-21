@@ -116,7 +116,7 @@ def scrape_profile(url):
                             article_urls.append(href)
 
         if article_urls:
-            print(f"Checkpoint 5: Good. (profile done)")
+            print(f"Checkpoint 5: Good (profile done)")
         else:
             print(f"Checkpoint 5: No data for article urls found.")
 
@@ -219,10 +219,14 @@ def scrape_article(url, counters):
 
         print(f"Checkpoint 11: Good (date is in the correct range)")
 
+        conference_keywords = {'conference',
+                               'preceding', 'workshop', 'meeting'}
+        ignored_fields = {'publication date', 'authors', 'description',
+                          'scholar articles', 'publisher', 'volume', 'pages'}
+        old_counters = counters.copy()
+
         for field, value in zip(fields, values):
             article_field = field.string.lower().strip()
-
-            found_something = False
 
             if 'total citations' in article_field:
                 if value.string:
@@ -236,19 +240,15 @@ def scrape_article(url, counters):
 
             elif 'preprint' in value:
                 counters['arXiv Preprint'] += 1
-                found_something = True
 
             elif article_field == 'journal' and 'preprint' not in value:
                 counters['Peer Reviewed Articles'] += 1
-                found_something = True
 
-            elif 'conference' in article_field or 'preceeding' in article_field or 'workshop' in article_field or 'meeting' in article_field:
+            elif any(keyword in article_field for keyword in conference_keywords) or any(keyword in value for keyword in conference_keywords):
                 counters['Conference Papers'] += 1
-                found_something = True
 
             elif article_field == 'book':
                 counters['Books'] += 1
-                found_something = True
 
                 # Check if the next field is 'book chapter' and has pages
                 next_field_index = fields.index(field) + 1
@@ -261,17 +261,18 @@ def scrape_article(url, counters):
                     if ['book chapter', 'pages'] in next_article_field and next_value.string:
                         counters['Book Chapters'] += 1
                         counters['Books'] -= 1
-                        found_something = True
 
             elif 'patent' in article_field:
                 counters['Patent'] += 1
-                found_something = True
 
-            elif article_field == 'publication date' or article_field == 'authors' or article_field == 'description' or article_field == 'scholar articles' or article_field == 'publisher' or article_field == 'volume' or article_field == 'pages':
+            elif any(ignored_field in article_field for ignored_field in ignored_fields):
                 continue
 
-        if not found_something:
-            print(f"Manual inspection required for {url}.")
+            else:
+                print(f"Manual inspection required for {article_field}.")
+
+        if counters == old_counters:
+            print(f"Manual inspection required for {url} (nothing was found).")
 
         print(f"Checkpoint 7: Good (article done)")
         print(counters, "\n")
