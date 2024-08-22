@@ -240,7 +240,6 @@ def scrape_article(article_url, counters):
 
         # Check if the date was found
         if date:
-            print(f"\nARTICLE:\nCheckpoint 8: Date found:\t\t\t\t\t\t\t\t\t\tGood")
             if date.count('/') == 2:
                 year, month, day = date.split('/')
                 year = int(year)
@@ -252,8 +251,6 @@ def scrape_article(article_url, counters):
             else:
                 return counters, 2
         else:
-            print(
-                f"\nARTICLE:\nCheckpoint 8: No date found: Bad\nProblematic URL:\n\"{article_url}\"")
             return counters, 2
 
         # Check if the publication date is before the input year
@@ -263,11 +260,11 @@ def scrape_article(article_url, counters):
         # Check if the publication date is in the correct range
         if not (year == input_year and month >= 5 or year == input_year + 1 and month < 5):
             print(
-                f"Checkpoint 9: Publication date is not in the correct range:\t\tArticle skipped")
+                f"Checkpoint 8: Publication date is not in the correct range:\t\tArticle skipped")
             return counters, 6
 
         print(
-            f"Checkpoint 9: Publication date is in the correct range:\t\t\tArticle accepted")
+            f"Checkpoint 8: Publication date is in the correct range:\t\t\tArticle accepted")
 
         # Define keyword sets with singular, plural, and title case forms
         conference_keywords = {
