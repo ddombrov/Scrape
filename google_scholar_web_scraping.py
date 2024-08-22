@@ -3,31 +3,25 @@ import requests
 import csv
 import time
 import random
-from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 import re
-
+from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
+from keywords import (conference_keywords, ignored_keywords, citations_keywords,
+                      preprint_keywords, journal_keywords, book_keywords,
+                      book_chapter_keywords, patent_keywords)
 
 def transform_url(original_url):
     """Transform the given URL to the desired format."""
 
-    if not original_url or not original_url.startswith(('http://', 'https://')):
+    if not original_url or not original_url.startswith(('https://scholar.google', 'http://scholar.google')):
         print(
-            f"\nPROFILE:\nCheckpoint 1: Invalid URL scheme: Bad\nProblematic URL:\n\"{original_url}\"")
+            f"\n\n\n\n\nPROFILE:\nCheckpoint 1: Invalid URL scheme: Bad\nProblematic URL:\n\"{original_url}\"")
         return None
     else:
-        print(f"\nPROFILE:\nCheckpoint 1: Valid URL scheme:\t\t\t\t\t\t\t\t\tGood")
+        print(f"\n\n\n\n\nPROFILE:\nCheckpoint 1: Valid URL scheme:\t\t\t\t\t\t\t\t\tGood")
 
-    # Parse the original URL
     parsed_url = urlparse(original_url)
-
-    # Extract query parameters
     query_params = parse_qs(parsed_url.query)
-
-    # Add or update parameters
-    query_params['view_op'] = ['list_works']
-    query_params['sortby'] = ['pubdate']
-
-    # Construct the new query string, ensuring the order of parameters
+    query_params.update({'view_op': ['list_works'], 'sortby': ['pubdate']})
     new_query_params = {
         'hl': query_params.get('hl', [''])[0],
         'user': query_params.get('user', [''])[0],
@@ -35,11 +29,8 @@ def transform_url(original_url):
         'sortby': 'pubdate'
     }
 
-    # Construct the new query string
     new_query_string = urlencode(new_query_params, doseq=True)
-
-    # Construct the new URL
-    new_url = urlunparse((
+    return urlunparse((
         parsed_url.scheme,
         parsed_url.netloc,
         parsed_url.path,
@@ -48,7 +39,89 @@ def transform_url(original_url):
         parsed_url.fragment
     ))
 
-    return new_url
+
+def extract_google_scholar_name(doc, url):
+    """
+    Extracts the full name of the Google Scholar profile from the provided HTML document.
+
+    Args:
+        doc (BeautifulSoup): The parsed HTML document.
+        url (str): The URL of the Google Scholar profile, used for error logging.
+
+    Returns:
+        str: The extracted full name if found, otherwise "Unknown".
+    """
+    name = doc.find(id="gsc_prf_in")
+    if name:
+        print(f"Checkpoint 3: Name was located:\t\t\t\t\t\t\t\t\tGood")
+        return name.string
+    else:
+        print(
+            f"Checkpoint 3: Name was not located: Bad\nProblematic URL:\n\"{url}\"")
+        return "Unknown"
+
+
+def extract_h_index_values(doc, url):
+    """
+    Extracts the h-index values (overall and since) from the provided HTML document.
+
+    Args:
+        doc (BeautifulSoup): The parsed HTML document.
+        url (str): The URL of the Google Scholar profile, used for error logging.
+
+    Returns:
+        tuple: A tuple containing the h-index overall and h-index since values, or (None, None) if not found.
+    """
+    h_index = doc.find_all(string="h-index")
+    if h_index:
+        parent = h_index[0].parent.parent.parent
+        td_elements = parent.find_all('td')
+        h_index_overall = td_elements[-2].get_text(strip=True)
+        h_index_since = td_elements[-1].get_text(strip=True)
+        print(f"Checkpoint 4: H-indices found:\t\t\t\t\t\t\t\t\tGood")
+        return h_index_overall, h_index_since
+    else:
+        print(
+            f"Checkpoint 4: H-indices not found: Bad\nProblematic URL:\n\"{url}\"")
+        return None, None
+
+
+def extract_article_urls(doc, url):
+    """
+    Extracts article URLs from the provided HTML document.
+
+    Args:
+        doc (BeautifulSoup): The parsed HTML document.
+        url (str): The URL of the Google Scholar profile, used for error logging.
+
+    Returns:
+        list: A list of article URLs extracted from the document, or an empty list if none are found.
+    """
+    article_urls = []
+    base_url = 'https://scholar.google.ca'
+    parent_element = doc.find(id='gsc_a_b')
+
+    if parent_element:
+        children = parent_element.find_all(class_='gsc_a_tr')
+        for child in children:
+            grandchildren = child.find_all(class_='gsc_a_t')
+            for grandchild in grandchildren:
+                articles = grandchild.find_all('a', href=True)
+                for article in articles:
+                    href = article['href']
+                    if href.startswith('/'):
+                        href = base_url + href
+                    if href:
+                        article_urls.append(href)
+
+    # Check if article URLs were found
+    if article_urls:
+        print(f"Checkpoint 5: Article URL data found:\t\t\t\t\t\t\tGood")
+    else:
+        print(
+            f"Checkpoint 5: Article URL data not found: Bad\nProblematic URL:\n\"{url}\"")
+
+    return article_urls
 
 
 def scrape_profile(url):
@@ -79,55 +152,12 @@ def scrape_profile(url):
         # Initialize the profile data
         profile_data = {}
 
-        # Find the name of the Google Scholar
-        name = doc.find(id="gsc_prf_in")
+        profile_data['Full Name'] = extract_google_scholar_name(doc, url)
 
-        if name:
-            profile_data['Full Name'] = name.string
-            print(f"Checkpoint 3: Name was located:\t\t\t\t\t\t\t\t\tGood")
-        else:
-            profile_data['Full Name'] = "Unknown"
-            print(
-                f"Checkpoint 3: Name was not located: Bad\nProblematic URL:\n\"{url}\"")
+        profile_data['H-Index Overall'], profile_data['H-Index Since'] = extract_h_index_values(
+            doc, url)
 
-        # Extract h-index values
-        h_index = doc.find_all(string="h-index")
-        if h_index:
-            parent = h_index[0].parent.parent.parent
-            td_elements = parent.find_all('td')
-            profile_data['H-Index Overall'] = td_elements[-2].get_text(
-                strip=True)
-            profile_data['H-Index Since'] = td_elements[-1].get_text(
-                strip=True)
-            print(f"Checkpoint 4: H-indices found:\t\t\t\t\t\t\t\t\tGood")
-        else:
-            print(
-                f"Checkpoint 4: H-indices not found: Bad\nProblematic URL:\n\"{url}\"")
-            profile_data['H-Index Overall'] = profile_data['H-Index Since'] = None
-
-        # Extract article URLs
-        article_urls = []
-        base_url = 'https://scholar.google.ca'
-        parent_element = doc.find(id='gsc_a_b')
-        if parent_element:
-            children = parent_element.find_all(class_='gsc_a_tr')
-            for child in children:
-                grandchildren = child.find_all(class_='gsc_a_t')
-                for grandchild in grandchildren:
-                    articles = grandchild.find_all('a', href=True)
-                    for article in articles:
-                        href = article['href']
-                        if href.startswith('/'):
-                            href = base_url + href
-                        if href:
-                            article_urls.append(href)
-
-        # Check if article URLs were found
-        if article_urls:
-            print(f"Checkpoint 5: Article url data found:\t\t\t\t\t\t\tGood")
-        else:
-            print(
-                f"Checkpoint 5: Article url data not found: Bad\nProblematic URL:\n\"{url}\"")
+        article_urls = extract_article_urls(doc, url)
 
         # Initialize counters
         counters = {
@@ -149,8 +179,6 @@ def scrape_profile(url):
             old_counters = counters.copy()
             counters, return_status = scrape_article(article_url, counters)
 
-            print(article_url)
-
             # If the valid articles have all been processed, break the loop
             if return_status == 0:
                 break
@@ -167,7 +195,7 @@ def scrape_profile(url):
                     print(
                         f"\nMANUAL INSPECTION REQUIRED:\nNo counts updated: Bad\nProblematic URL:\n{article_url}\n")
 
-                print("\n",counters,"\n")
+                print("\nNew Counts:\n", counters, "\n")
 
             # If the date format is invalid, manual inspection is required
             elif return_status == 2:
@@ -211,6 +239,56 @@ def scrape_profile(url):
         return None
 
 
+def process_date(date):
+    """
+    Processes a date string and extracts the year and month.
+
+    Args:
+        date (str): The date string in the format 'YYYY/MM/DD' or 'YYYY/MM'.
+
+    Returns:
+        tuple: A tuple containing the year and month as integers.
+               If the date format is invalid or the date is None, returns (None, None).
+    """
+    if date and date.count('/') == 2:
+        year, month, _ = date.split('/')
+        return int(year), int(month)
+
+    if date and date.count('/') == 1:
+        year, month = date.split('/')
+        return int(year), int(month)
+
+    return None, None
+
+
+def validate_publication_date(year, month, input_year):
+    """
+    Validates the publication date against the input year and range requirements.
+
+    Args:
+        year (int): The publication year of the article.
+        month (int): The publication month of the article.
+        input_year (int): The year against which to validate the publication date.
+
+    Returns:
+        int: A status code representing the validation result:
+             - 0: If the publication date is before the input year.
+             - 6: If the publication date is not in the correct range.
+             - 1: If the publication date is valid and in the correct range.
+    """
+    # Check if the publication date is before the input year
+    if (year < input_year or (year == input_year and month < 5)):
+        return 0
+
+    # Check if the publication date is in the correct range
+    if not ((year == input_year and month >= 5) or (year == input_year + 1 and month < 5)):
+        print(f"Checkpoint 8: Publication date is not in the correct range:\t\tArticle skipped")
+        return 6
+
+    print(f"Checkpoint 8: Publication date is in the correct range:\t\t\tArticle accepted")
+    return 1
+
+
 def scrape_article(article_url, counters):
     """Function to scrape an article"""
 
@@ -238,82 +316,13 @@ def scrape_article(article_url, counters):
                 date = value.string.strip() if value.string else value.get_text(strip=True)
                 break
 
-        # Check if the date was found
-        if date:
-            if date.count('/') == 2:
-                year, month, day = date.split('/')
-                year = int(year)
-                month = int(month)
-            elif date.count('/') == 1:
-                year, month, = date.split('/')
-                year = int(year)
-                month = int(month)
-            else:
-                return counters, 2
-        else:
+        year, month = process_date(date)
+        if year is None or month is None:
             return counters, 2
 
-        # Check if the publication date is before the input year
-        if (year < input_year or (year == input_year and month < 5)):
-            return counters, 0
-
-        # Check if the publication date is in the correct range
-        if not (year == input_year and month >= 5 or year == input_year + 1 and month < 5):
-            print(
-                f"Checkpoint 8: Publication date is not in the correct range:\t\tArticle skipped")
-            return counters, 6
-
-        print(
-            f"Checkpoint 8: Publication date is in the correct range:\t\t\tArticle accepted")
-
-        # Define keyword sets with singular, plural, and title case forms
-        conference_keywords = {
-            'conference', 'conferences', 'proceeding', 'proceedings',
-            'workshop', 'workshops', 'meeting', 'meetings',
-            'Conference', 'Conferences', 'Proceeding', 'Proceedings',
-            'Workshop', 'Workshops', 'Meeting', 'Meetings'
-        }
-
-        ignored_keywords = {
-            'publication date', 'publication dates', 'authors', 'author',
-            'descriptions', 'description', 'scholar articles', 'publisher',
-            'publishers', 'volume', 'volumes', 'page', 'pages', 'issue', 'issues'
-            'Publication Date', 'Publication Dates', 'Authors', 'Author',
-            'Descriptions', 'Description', 'Scholar Articles', 'Publisher',
-            'Publishers', 'Volume', 'Volumes', 'Page', 'Pages', 'Issue', 'Issues'
-        }
-
-        citations_keywords = {
-            'total citations', 'total citation',
-            'Total Citations', 'Total Citation'
-        }
-
-        preprint_keywords = {
-            'preprint', 'preprints', 'arxiv', 'biorxiv', 'medrxiv',
-            'Preprint', 'Preprints', 'Arxiv', 'Biorxiv', 'Medrxiv'
-        }
-
-        journal_keywords = {
-            'journal', 'journals',
-            'Journal', 'Journals'
-        }
-
-        book_keywords = {
-            'book', 'books',
-            'Book', 'Books'
-        }
-
-        book_chapter_keywords = {
-            'book chapter', 'book chapters',
-            'Book Chapter', 'Book Chapters',
-            'book page', 'book pages',
-            'Book Page', 'Book Pages'
-        }
-
-        patent_keywords = {
-            'patent', 'patents',
-            'Patent', 'Patents'
-        }
+        status_code = validate_publication_date(year, month, input_year)
+        if status_code != 1:
+            return counters, status_code
 
         # Process each field and value
         for field, value in zip(fields, values):
@@ -334,12 +343,12 @@ def scrape_article(article_url, counters):
             # Check for ignored fields
             if any(ignored_keyword in article_field for ignored_keyword in ignored_keywords):
                 continue
-            
+
             # Handle conference-related keywords
             elif any(keyword in article_field for keyword in conference_keywords) or (value and any(keyword in str(value) for keyword in conference_keywords)):
                 counters['Conference Papers'] += 1
                 continue
-            
+
             # Handle preprint-related keywords
             elif value and any(keyword in str(value) for keyword in preprint_keywords):
                 counters['arXiv Preprint'] += 1
@@ -394,7 +403,6 @@ def process_urls(input_file, output_file):
     # Read the URLs from the input file
     with open(input_file, 'r') as file:
         urls = file.read().splitlines()
-        # print(urls)
 
     # Write the header row to the CSV file
     with open(output_file, 'w', newline='') as csvfile:
@@ -417,6 +425,8 @@ def process_urls(input_file, output_file):
             'Average Peer Reviewed Publications per Researcher',
             'Total Conference Papers'
         ])
+
+        print("PROCESS HAS BEGUN SCRAPING")
 
         # Process each URL
         for url in urls:
