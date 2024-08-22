@@ -149,6 +149,8 @@ def scrape_profile(url):
             old_counters = counters.copy()
             counters, return_status = scrape_article(article_url, counters)
 
+            print(article_url)
+
             # If the valid articles have all been processed, break the loop
             if return_status == 0:
                 break
@@ -159,12 +161,13 @@ def scrape_profile(url):
                 if article_number == 20:
                     print(
                         f"\nMANUAL INSPECTION REQUIRED:\nMore than 20 articles found: Bad\nProblematic profile URL:\n{url}\n")
-                    
+
                 # In the case the count was supposed to go up and didn't, manual inspection is required
                 if counters == old_counters:
                     print(
                         f"\nMANUAL INSPECTION REQUIRED:\nNo counts updated: Bad\nProblematic URL:\n{article_url}\n")
 
+                print("\n",counters,"\n")
 
             # If the date format is invalid, manual inspection is required
             elif return_status == 2:
@@ -237,7 +240,7 @@ def scrape_article(article_url, counters):
 
         # Check if the date was found
         if date:
-            print(f"Checkpoint 8: Date found:\t\t\t\t\t\t\t\t\t\tGood")
+            print(f"\nARTICLE:\nCheckpoint 8: Date found:\t\t\t\t\t\t\t\t\t\tGood")
             if date.count('/') == 2:
                 year, month, day = date.split('/')
                 year = int(year)
@@ -250,26 +253,21 @@ def scrape_article(article_url, counters):
                 return counters, 2
         else:
             print(
-                f"Checkpoint 8: No date found: Bad\nProblematic URL:\n\"{article_url}\"")
+                f"\nARTICLE:\nCheckpoint 8: No date found: Bad\nProblematic URL:\n\"{article_url}\"")
             return counters, 2
 
         # Check if the publication date is before the input year
         if (year < input_year or (year == input_year and month < 5)):
-            print(
-                f"Checkpoint 9: Publication date is before May {input_year}:\t\t\t\tArticle skipped")
             return counters, 0
-
-        print(
-            f"Checkpoint 9: Publication date is after May {input_year}:\t\t\t\tArticle accepted")
 
         # Check if the publication date is in the correct range
         if not (year == input_year and month >= 5 or year == input_year + 1 and month < 5):
             print(
-                f"Checkpoint 10: Publication date is not in the correct range:\tArticle skipped")
+                f"Checkpoint 9: Publication date is not in the correct range:\t\tArticle skipped")
             return counters, 6
 
         print(
-            f"Checkpoint 10: Publication date is in the correct range:\t\tArticle accepted")
+            f"Checkpoint 9: Publication date is in the correct range:\t\t\tArticle accepted")
 
         # Define keyword sets with singular, plural, and title case forms
         conference_keywords = {
@@ -310,7 +308,9 @@ def scrape_article(article_url, counters):
 
         book_chapter_keywords = {
             'book chapter', 'book chapters',
-            'Book Chapter', 'Book Chapters'
+            'Book Chapter', 'Book Chapters',
+            'book page', 'book pages',
+            'Book Page', 'Book Pages'
         }
 
         patent_keywords = {
@@ -329,25 +329,32 @@ def scrape_article(article_url, counters):
                     if match:
                         cited_by_number = match.group(1)
                         counters['Citation Count'] += int(cited_by_number)
+
+                    # If no 'Cited by' number is found, manual inspection is required
+                    else:
                         return counters, 5
 
+            # Check for ignored fields
+            if any(ignored_keyword in article_field for ignored_keyword in ignored_keywords):
+                continue
+            
+            # Handle conference-related keywords
+            elif any(keyword in article_field for keyword in conference_keywords) or (value and any(keyword in str(value) for keyword in conference_keywords)):
+                counters['Conference Papers'] += 1
+                continue
+            
             # Handle preprint-related keywords
-            if value and any(keyword in str(value) for keyword in preprint_keywords):
+            elif value and any(keyword in str(value) for keyword in preprint_keywords):
                 counters['arXiv Preprint'] += 1
                 continue
 
             # Handle journal-related keywords
-            if any(keyword in article_field for keyword in journal_keywords) and 'preprint' not in str(value):
+            elif any(keyword in article_field for keyword in journal_keywords) and 'preprint' not in str(value):
                 counters['Peer Reviewed Articles'] += 1
                 continue
 
-            # Handle conference-related keywords
-            if any(keyword in article_field for keyword in conference_keywords) or (value and any(keyword in str(value) for keyword in conference_keywords)):
-                counters['Conference Papers'] += 1
-                continue
-
             # Handle book-related keywords
-            if any(keyword in article_field for keyword in book_keywords):
+            elif any(keyword in article_field for keyword in book_keywords):
                 counters['Books'] += 1
 
                 # Check if the next field is 'book chapter' and has pages
@@ -364,19 +371,13 @@ def scrape_article(article_url, counters):
                 continue
 
             # Handle patent-related keywords
-            if any(keyword in article_field for keyword in patent_keywords):
+            elif any(keyword in article_field for keyword in patent_keywords):
                 counters['Patent'] += 1
-                continue
-
-            # Check for ignored fields
-            if any(ignored_keyword in article_field for ignored_keyword in ignored_keywords):
                 continue
 
             # Handle cases that don't match any known keyword
             if not (any(keyword in article_field for keyword in (citations_keywords | preprint_keywords | journal_keywords | conference_keywords | book_keywords | patent_keywords)) or
                     any(keyword in str(value) for keyword in (conference_keywords | preprint_keywords))):
-                # print(
-                #     f"\nMANUAL INSPECTION REQUIRED:\nUnrecognized article_field: Bad\nProblematic URL:\n{article_url}\n")
                 return counters, 4
 
         print(f"Checkpoint 7: Article was scraped successfully:\t\t\t\t\tGood")

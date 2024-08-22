@@ -17,7 +17,7 @@ This project is designed to scrape Google Scholar using Python. The script fetch
 python google_scholar_web_scraping.py > log.txt 2>&1
 ```
 
-6. output.csv will contain the base spreadsheet, while log.txt will tell you where human manual inspection is needed
+6. output.csv will contain the base spreadsheet, while log.txt will tell you where human manual inspection is needed. Manual inspection does mean that the link has been fully ignored (can be either article or profile - visit the link to see what was ignored)
 
 ### Using the Scraper Locally
 
