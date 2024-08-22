@@ -6,7 +6,6 @@ import random
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 import re
 
-
 def transform_url(original_url):
     """Transform the given URL to the desired format."""
 
@@ -164,23 +163,27 @@ def scrape_profile(url):
 
             if keepGoing == 1 and i == 20:
                 print(
-                    f"MANUAL INSPECTION REQUIRED:\nMore than 20 articles found: Bad\nProblematic URL:\n{url}\n")
+                    f"MANUAL INSPECTION REQUIRED:\nMore than 20 articles found: Bad\nProblematic profile URL:\n{url}\n")
 
             if keepGoing == 2:
+                counters = old_counters
                 print(
-                    f"MANUAL INSPECTION REQUIRED:\nDate format invalid: Bad\nProblematic URL:\n{url}\n")
+                    f"MANUAL INSPECTION REQUIRED:\nDate format invalid: Bad\nProblematic URL:\n{article_url}\n")
                 
             if keepGoing == 3:
+                counters = old_counters
                 print(
-                    f"MANUAL INSPECTION REQUIRED:\nError fetching data from article: Bad\nProblematic URL:\n{url}\n")
+                    f"MANUAL INSPECTION REQUIRED:\nError fetching data from article: Bad\nProblematic URL:\n{article_url}\n")
                 
             if keepGoing == 4:
+                counters = old_counters
                 print(
-                    f"MANUAL INSPECTION REQUIRED:\nUnrecognized article_field: Bad\nProblematic URL:\n{url}\n")
+                    f"MANUAL INSPECTION REQUIRED:\nUnrecognized article_field: Bad\nProblematic URL:\n{article_url}\n")
                 
             if keepGoing == 5:
+                counters = old_counters
                 print(
-                    f"MANUAL INSPECTION REQUIRED:\nNo 'Cited by' number found: Bad\nProblematic URL:\n{url}\n")
+                    f"MANUAL INSPECTION REQUIRED:\nNo 'Cited by' number found: Bad\nProblematic URL:\n{article_url}\n")
                 
         # Add total citations to profile data
         profile_data['Total Citations'] = counters['Citation Count']
@@ -439,7 +442,7 @@ def process_urls(input_file, output_file):
     print("\n\nPROCESS COMPLETED SUCCESSFULLY\n\n")
 
 
-input_file = 'urls.txt'  # File containing list of URLs
+input_file = 'test_url.txt'  # File containing list of URLs
 output_file = 'output.csv'  # File to save the results
 input_year = 2023  # Year to extract (ex. put 2023 for May 2023 - April 2024)
 
