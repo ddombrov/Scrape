@@ -6,6 +6,7 @@ import random
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 import re
 
+
 def transform_url(original_url):
     """Transform the given URL to the desired format."""
 
@@ -69,12 +70,13 @@ def scrape_profile(url):
     }
 
     try:
+
         # Send a GET request to the URL
         result = requests.get(url, headers=headers)
         result.raise_for_status()
         doc = BeautifulSoup(result.text, 'html.parser')
 
-        # Extract profile data
+        # Initialize the profile data
         profile_data = {}
 
         # Find the name of the Google Scholar
@@ -98,7 +100,6 @@ def scrape_profile(url):
             profile_data['H-Index Since'] = td_elements[-1].get_text(
                 strip=True)
             print(f"Checkpoint 4: H-indices found:\t\t\t\t\t\t\t\t\tGood")
-
         else:
             print(
                 f"Checkpoint 4: H-indices not found: Bad\nProblematic URL:\n \"{url}\"")
@@ -121,6 +122,7 @@ def scrape_profile(url):
                         if href:
                             article_urls.append(href)
 
+        # Check if article URLs were found
         if article_urls:
             print(f"Checkpoint 5: Article url data found:\t\t\t\t\t\t\tGood")
         else:
@@ -137,54 +139,54 @@ def scrape_profile(url):
             'Conference Papers': 0,
             'Patent': 0
         }
-        i = 0
+        article_number = 0
 
         # Process each article URL
         for article_url in article_urls:
             time.sleep(2)  # Rate limit
-            i += 1
+            article_number += 1
             keepGoing = 1
             old_counters = counters.copy()
             counters, keepGoing = scrape_article(article_url, counters)
-            
+
+            # Inform the user if no counts were updated
             if counters == old_counters:
                 print(
                     f"\nMANUAL INSPECTION REQUIRED:\nNo counts updated: Bad\nProblematic URL:\n{url}\n")
 
-            #keepGoing 0 = Do not keep going
-            #keepGoing 1 = Do keep going
-            #keepGoing 2 = Date format invalid
-            #keepGoing 3 = Error fetching data from article
-            #keepGoing 4 = Unrecognized article_field
-            #keepGoing 5 = No 'Cited by' number found
-
+            # If the valid articles have all been processed, break the loop
             if keepGoing == 0:
                 break
 
-            if keepGoing == 1 and i == 20:
+            # If more than 20 articles are found, manual inspection is required
+            if keepGoing == 1 and article_number == 20:
                 print(
                     f"MANUAL INSPECTION REQUIRED:\nMore than 20 articles found: Bad\nProblematic profile URL:\n{url}\n")
 
+            # If the date format is invalid, manual inspection is required
             if keepGoing == 2:
                 counters = old_counters
                 print(
                     f"MANUAL INSPECTION REQUIRED:\nDate format invalid: Bad\nProblematic URL:\n{article_url}\n")
-                
+
+            # If there is an error fetching data from the article, manual inspection is required
             if keepGoing == 3:
                 counters = old_counters
                 print(
                     f"MANUAL INSPECTION REQUIRED:\nError fetching data from article: Bad\nProblematic URL:\n{article_url}\n")
-                
+
+            # If an unrecognized article_field is found, manual inspection is required
             if keepGoing == 4:
                 counters = old_counters
                 print(
                     f"MANUAL INSPECTION REQUIRED:\nUnrecognized article_field: Bad\nProblematic URL:\n{article_url}\n")
-                
+
+            # If no 'Cited by' number is found, manual inspection is required
             if keepGoing == 5:
                 counters = old_counters
                 print(
                     f"MANUAL INSPECTION REQUIRED:\nNo 'Cited by' number found: Bad\nProblematic URL:\n{article_url}\n")
-                
+
         # Add total citations to profile data
         profile_data['Total Citations'] = counters['Citation Count']
 
@@ -217,19 +219,23 @@ def scrape_article(url, counters):
     }
 
     try:
+
+        # Send a GET request to the URL
         result = requests.get(url, headers=headers)
         result.raise_for_status()
         doc = BeautifulSoup(result.text, 'html.parser')
 
+        # Extract the publication date
         fields = doc.find_all('div', class_='gsc_oci_field')
         values = doc.find_all('div', class_='gsc_oci_value')
-
         date = None
+
         for field, value in zip(fields, values):
             if field.string and 'publication date' in field.string.strip().lower():
                 date = value.string.strip() if value.string else value.get_text(strip=True)
                 break
 
+        # Check if the date was found
         if date:
             print(f"Checkpoint 9: Date found:\t\t\t\t\t\t\t\t\t\tGood")
             if date.count('/') == 2:
@@ -246,7 +252,6 @@ def scrape_article(url, counters):
                 print(
                     f"\nMANUAL INSPECTION REQUIRED:\nCheckpoint 10: Date has invalid format: Bad\nProblematic URL:\n {url}\n")
                 return counters, 2
-
         else:
             print(
                 f"Checkpoint 9: No date found: Bad\nProblematic URL:\n \"{url}\"")
@@ -307,16 +312,21 @@ def scrape_article(url, counters):
             'Book', 'Books'
         }
 
+        book_chapter_keywords = {
+            'book chapter', 'book chapters',
+            'Book Chapter', 'Book Chapters'
+        }
+
         patent_keywords = {
             'patent', 'patents',
             'Patent', 'Patents'
         }
 
-        
-
+        # Process each field and value
         for field, value in zip(fields, values):
             article_field = field.string.lower().strip()
 
+            # Handle citations-related keywords
             if any(keyword in article_field for keyword in citations_keywords):
                 if value:
                     match = re.search(r'Cited by (\d+)', str(value))
@@ -330,6 +340,7 @@ def scrape_article(url, counters):
                             "Checkpoint 13: No 'Cited by' number found: Bad\nProblematic URL:\n \"{url}\"")
                         return counters, 5
 
+            # Handle preprint-related keywords
             if value and any(keyword in str(value) for keyword in preprint_keywords):
                 counters['arXiv Preprint'] += 1
                 continue
@@ -344,6 +355,7 @@ def scrape_article(url, counters):
                 counters['Conference Papers'] += 1
                 continue
 
+            # Handle book-related keywords
             if any(keyword in article_field for keyword in book_keywords):
                 counters['Books'] += 1
 
@@ -354,11 +366,13 @@ def scrape_article(url, counters):
                     ).strip()
                     next_value = values[next_field_index]
 
-                    if 'book chapter' in next_article_field and str(next_value):
+                    # Check if the next field is a book chapter and only count it as a book chapter
+                    if any(keyword in next_article_field for keyword in book_chapter_keywords) and str(next_value):
                         counters['Book Chapters'] += 1
                         counters['Books'] -= 1
                 continue
 
+            # Handle patent-related keywords
             if any(keyword in article_field for keyword in patent_keywords):
                 counters['Patent'] += 1
                 continue
@@ -415,10 +429,8 @@ def process_urls(input_file, output_file):
             'Total Conference Papers'
         ])
 
-        # print(urls)
         # Process each URL
         for url in urls:
-            # print(url)
             time.sleep(random.uniform(1, 3))
             profile_data = scrape_profile(url)
 
@@ -442,7 +454,7 @@ def process_urls(input_file, output_file):
     print("\n\nPROCESS COMPLETED SUCCESSFULLY\n\n")
 
 
-input_file = 'test_url.txt'  # File containing list of URLs
+input_file = 'urls.txt'  # File containing list of URLs
 output_file = 'output.csv'  # File to save the results
 input_year = 2023  # Year to extract (ex. put 2023 for May 2023 - April 2024)
 

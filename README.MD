@@ -14,8 +14,10 @@ This project is designed to scrape Google Scholar using Python. The script fetch
 5. Open the Shell tab and run the following command:
 
 ```bash
-python google_scholar_web_scraping.py
+python google_scholar_web_scraping.py > log.txt 2>&1
 ```
+
+6. output.csv will contain the base spreadsheet, while log.txt will tell you where human manual inspection is needed
 
 ### Using the Scraper Locally
 
