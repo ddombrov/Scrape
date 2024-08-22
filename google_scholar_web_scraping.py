@@ -9,119 +9,67 @@ from keywords import (conference_keywords, ignored_keywords, citations_keywords,
                       preprint_keywords, journal_keywords, book_keywords,
                       book_chapter_keywords, patent_keywords)
 
-def transform_url(original_url):
-    """Transform the given URL to the desired format."""
 
-    if not original_url or not original_url.startswith(('https://scholar.google', 'http://scholar.google')):
-        print(
-            f"\n\n\n\n\nPROFILE:\nCheckpoint 1: Invalid URL scheme: Bad\nProblematic URL:\n\"{original_url}\"")
-        return None
-    else:
-        print(f"\n\n\n\n\nPROFILE:\nCheckpoint 1: Valid URL scheme:\t\t\t\t\t\t\t\t\tGood")
+def process_urls(input_file, output_file):
+    """Function to process a list of URLs"""
 
-    parsed_url = urlparse(original_url)
-    query_params = parse_qs(parsed_url.query)
-    query_params.update({'view_op': ['list_works'], 'sortby': ['pubdate']})
-    new_query_params = {
-        'hl': query_params.get('hl', [''])[0],
-        'user': query_params.get('user', [''])[0],
-        'view_op': 'list_works',
-        'sortby': 'pubdate'
-    }
+    since_input_year = input_year - 4
 
-    new_query_string = urlencode(new_query_params, doseq=True)
-    return urlunparse((
-        parsed_url.scheme,
-        parsed_url.netloc,
-        parsed_url.path,
-        parsed_url.params,
-        new_query_string,
-        parsed_url.fragment
-    ))
+    # Read the URLs from the input file
+    with open(input_file, 'r') as file:
+        urls = file.read().splitlines()
 
+    # Write the header row to the CSV file
+    with open(output_file, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow([
+            'Full Name', 'Link', 'Google Scholar',
+            f'Citation Count {input_year}',
+            f'H-Index Since {since_input_year}', 'H-Index Overall',
+            f'Peer Reviewed Articles {input_year}',
+            f'arXiv Preprint {input_year}',
+            f'Books {input_year}',
+            f'Book Chapters {input_year}',
+            f'Conference Papers {input_year}',
+            f'Patent {input_year}',
+            'Total Citations',
+            f'Average Citations per Researcher in {input_year}',
+            f'Average H-Index Since {since_input_year} per Researcher',
+            'Average Overall H-Index',
+            'Total Peer Reviewed Articles',
+            'Average Peer Reviewed Publications per Researcher',
+            'Total Conference Papers'
+        ])
 
-def extract_google_scholar_name(doc, url):
-    """
-    Extracts the full name of the Google Scholar profile from the provided HTML document.
+        print("PROCESS HAS BEGUN SCRAPING")
 
-    Args:
-        doc (BeautifulSoup): The parsed HTML document.
-        url (str): The URL of the Google Scholar profile, used for error logging.
+        for url in urls:
+            process_url(url, writer)
 
-    Returns:
-        str: The extracted full name if found, otherwise "Unknown".
-    """
-    name = doc.find(id="gsc_prf_in")
-    if name:
-        print(f"Checkpoint 3: Name was located:\t\t\t\t\t\t\t\t\tGood")
-        return name.string
-    else:
-        print(
-            f"Checkpoint 3: Name was not located: Bad\nProblematic URL:\n\"{url}\"")
-        return "Unknown"
+    print("\n\nPROCESS COMPLETED SUCCESSFULLY\n\n")
 
 
-def extract_h_index_values(doc, url):
-    """
-    Extracts the h-index values (overall and since) from the provided HTML document.
+def process_url(url, writer):
+    """Function to process and scrape data for a single URL and write to CSV."""
 
-    Args:
-        doc (BeautifulSoup): The parsed HTML document.
-        url (str): The URL of the Google Scholar profile, used for error logging.
+    time.sleep(random.uniform(1, 3))
+    profile_data = scrape_profile(url)
 
-    Returns:
-        tuple: A tuple containing the h-index overall and h-index since values, or (None, None) if not found.
-    """
-    h_index = doc.find_all(string="h-index")
-    if h_index:
-        parent = h_index[0].parent.parent.parent
-        td_elements = parent.find_all('td')
-        h_index_overall = td_elements[-2].get_text(strip=True)
-        h_index_since = td_elements[-1].get_text(strip=True)
-        print(f"Checkpoint 4: H-indices found:\t\t\t\t\t\t\t\t\tGood")
-        return h_index_overall, h_index_since
-    else:
-        print(
-            f"Checkpoint 4: H-indices not found: Bad\nProblematic URL:\n\"{url}\"")
-        return None, None
-
-
-def extract_article_urls(doc, url):
-    """
-    Extracts article URLs from the provided HTML document.
-
-    Args:
-        doc (BeautifulSoup): The parsed HTML document.
-        url (str): The URL of the Google Scholar profile, used for error logging.
-
-    Returns:
-        list: A list of article URLs extracted from the document, or an empty list if none are found.
-    """
-    article_urls = []
-    base_url = 'https://scholar.google.ca'
-    parent_element = doc.find(id='gsc_a_b')
-
-    if parent_element:
-        children = parent_element.find_all(class_='gsc_a_tr')
-        for child in children:
-            grandchildren = child.find_all(class_='gsc_a_t')
-            for grandchild in grandchildren:
-                articles = grandchild.find_all('a', href=True)
-                for article in articles:
-                    href = article['href']
-                    if href.startswith('/'):
-                        href = base_url + href
-                    if href:
-                        article_urls.append(href)
-
-    # Check if article URLs were found
-    if article_urls:
-        print(f"Checkpoint 5: Article URL data found:\t\t\t\t\t\t\tGood")
-    else:
-        print(
-            f"Checkpoint 5: Article URL data not found: Bad\nProblematic URL:\n\"{url}\"")
-
-    return article_urls
+    if profile_data:
+        writer.writerow([
+            profile_data.get('Full Name', ''),
+            url,
+            "Yes",
+            profile_data.get('Citation Count', ''),
+            profile_data.get('H-Index Since', ''),
+            profile_data.get('H-Index Overall', ''),
+            profile_data.get('Peer Reviewed Articles', ''),
+            profile_data.get('arXiv Preprint', ''),
+            profile_data.get('Books', ''),
+            profile_data.get('Book Chapters', ''),
+            profile_data.get('Conference Papers', ''),
+            profile_data.get('Patent', ''),
+        ])
 
 
 def scrape_profile(url):
@@ -239,6 +187,164 @@ def scrape_profile(url):
         return None
 
 
+def transform_url(original_url):
+    """Transform the given URL to the desired format."""
+
+    if not original_url or not original_url.startswith(('https://scholar.google', 'http://scholar.google')):
+        print(
+            f"\n\n\n\n\nPROFILE:\nCheckpoint 1: Invalid URL scheme: Bad\nProblematic URL:\n\"{original_url}\"")
+        return None
+    else:
+        print(f"\n\n\n\n\nPROFILE:\nCheckpoint 1: Valid URL scheme:\t\t\t\t\t\t\t\t\tGood")
+
+    parsed_url = urlparse(original_url)
+    query_params = parse_qs(parsed_url.query)
+    query_params.update({'view_op': ['list_works'], 'sortby': ['pubdate']})
+    new_query_params = {
+        'hl': query_params.get('hl', [''])[0],
+        'user': query_params.get('user', [''])[0],
+        'view_op': 'list_works',
+        'sortby': 'pubdate'
+    }
+
+    new_query_string = urlencode(new_query_params, doseq=True)
+    return urlunparse((
+        parsed_url.scheme,
+        parsed_url.netloc,
+        parsed_url.path,
+        parsed_url.params,
+        new_query_string,
+        parsed_url.fragment
+    ))
+
+
+def extract_google_scholar_name(doc, url):
+    """
+    Extracts the full name of the Google Scholar profile from the provided HTML document.
+
+    Args:
+        doc (BeautifulSoup): The parsed HTML document.
+        url (str): The URL of the Google Scholar profile, used for error logging.
+
+    Returns:
+        str: The extracted full name if found, otherwise "Unknown".
+    """
+    name = doc.find(id="gsc_prf_in")
+    if name:
+        print(f"Checkpoint 3: Name was located:\t\t\t\t\t\t\t\t\tGood")
+        return name.string
+    else:
+        print(
+            f"Checkpoint 3: Name was not located: Bad\nProblematic URL:\n\"{url}\"")
+        return "Unknown"
+
+
+def extract_h_index_values(doc, url):
+    """
+    Extracts the h-index values (overall and since) from the provided HTML document.
+
+    Args:
+        doc (BeautifulSoup): The parsed HTML document.
+        url (str): The URL of the Google Scholar profile, used for error logging.
+
+    Returns:
+        tuple: A tuple containing the h-index overall and h-index since values, or (None, None) if not found.
+    """
+    h_index = doc.find_all(string="h-index")
+    if h_index:
+        parent = h_index[0].parent.parent.parent
+        td_elements = parent.find_all('td')
+        h_index_overall = td_elements[-2].get_text(strip=True)
+        h_index_since = td_elements[-1].get_text(strip=True)
+        print(f"Checkpoint 4: H-indices found:\t\t\t\t\t\t\t\t\tGood")
+        return h_index_overall, h_index_since
+    else:
+        print(
+            f"Checkpoint 4: H-indices not found: Bad\nProblematic URL:\n\"{url}\"")
+        return None, None
+
+
+def extract_article_urls(doc, url):
+    """
+    Extracts article URLs from the provided HTML document.
+
+    Args:
+        doc (BeautifulSoup): The parsed HTML document.
+        url (str): The URL of the Google Scholar profile, used for error logging.
+
+    Returns:
+        list: A list of article URLs extracted from the document, or an empty list if none are found.
+    """
+    article_urls = []
+    base_url = 'https://scholar.google.ca'
+    parent_element = doc.find(id='gsc_a_b')
+
+    if parent_element:
+        children = parent_element.find_all(class_='gsc_a_tr')
+        for child in children:
+            grandchildren = child.find_all(class_='gsc_a_t')
+            for grandchild in grandchildren:
+                articles = grandchild.find_all('a', href=True)
+                for article in articles:
+                    href = article['href']
+                    if href.startswith('/'):
+                        href = base_url + href
+                    if href:
+                        article_urls.append(href)
+
+    # Check if article URLs were found
+    if article_urls:
+        print(f"Checkpoint 5: Article URL data found:\t\t\t\t\t\t\tGood")
+    else:
+        print(
+            f"Checkpoint 5: Article URL data not found: Bad\nProblematic URL:\n\"{url}\"")
+
+    return article_urls
+
+
+def scrape_article(article_url, counters):
+    """Function to scrape an article"""
+
+    if not article_url:
+        return counters, 3
+
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+
+    try:
+
+        # Send a GET request to the URL
+        result = requests.get(article_url, headers=headers)
+        result.raise_for_status()
+        doc = BeautifulSoup(result.text, 'html.parser')
+
+        # Extract the publication date
+        fields = doc.find_all('div', class_='gsc_oci_field')
+        values = doc.find_all('div', class_='gsc_oci_value')
+        date = None
+
+        for field, value in zip(fields, values):
+            if field.string and 'publication date' in field.string.strip().lower():
+                date = value.string.strip() if value.string else value.get_text(strip=True)
+                break
+
+        year, month = process_date(date)
+        if year is None or month is None:
+            return counters, 2
+
+        status_code = validate_publication_date(year, month, input_year)
+        if status_code != 1:
+            return counters, status_code
+
+        return process_article_fields(fields, values, counters)
+
+    except requests.RequestException as e:
+        print(
+            f"Checkpoint 7: Error fetching data from article: Bad\nProblematic URL:\n\"{e}\"")
+        return counters, 3
+
+
 def process_date(date):
     """
     Processes a date string and extracts the year and month.
@@ -289,167 +395,79 @@ def validate_publication_date(year, month, input_year):
     return 1
 
 
-def scrape_article(article_url, counters):
-    """Function to scrape an article"""
+def process_article_fields(fields, values, counters):
+    """
+    Processes fields and values from an article and updates the counters.
 
-    if not article_url:
-        return counters, 3
+    Args:
+        fields (list): List of field elements from the article.
+        values (list): List of value elements from the article.
+        counters (dict): Dictionary of counters to be updated.
 
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-    }
+    Returns:
+        tuple: A tuple containing the updated counters and a status code.
+    """
+    for field, value in zip(fields, values):
+        article_field = field.string.lower().strip()
 
-    try:
+        # Handle citations-related keywords
+        if any(keyword in article_field for keyword in citations_keywords):
+            if value:
+                match = re.search(r'Cited by (\d+)', str(value))
+                if match:
+                    cited_by_number = match.group(1)
+                    counters['Citation Count'] += int(cited_by_number)
+                else:
+                    return counters, 5
 
-        # Send a GET request to the URL
-        result = requests.get(article_url, headers=headers)
-        result.raise_for_status()
-        doc = BeautifulSoup(result.text, 'html.parser')
+        # Check for ignored fields
+        if any(ignored_keyword in article_field for ignored_keyword in ignored_keywords):
+            continue
 
-        # Extract the publication date
-        fields = doc.find_all('div', class_='gsc_oci_field')
-        values = doc.find_all('div', class_='gsc_oci_value')
-        date = None
+        # Handle conference-related keywords
+        elif any(keyword in article_field for keyword in conference_keywords) or (value and any(keyword in str(value) for keyword in conference_keywords)):
+            counters['Conference Papers'] += 1
+            continue
 
-        for field, value in zip(fields, values):
-            if field.string and 'publication date' in field.string.strip().lower():
-                date = value.string.strip() if value.string else value.get_text(strip=True)
-                break
+        # Handle preprint-related keywords
+        elif value and any(keyword in str(value) for keyword in preprint_keywords):
+            counters['arXiv Preprint'] += 1
+            continue
 
-        year, month = process_date(date)
-        if year is None or month is None:
-            return counters, 2
+        # Handle journal-related keywords
+        elif any(keyword in article_field for keyword in journal_keywords) and 'preprint' not in str(value).lower():
+            counters['Peer Reviewed Articles'] += 1
+            continue
 
-        status_code = validate_publication_date(year, month, input_year)
-        if status_code != 1:
-            return counters, status_code
+        # Handle book-related keywords
+        elif any(keyword in article_field for keyword in book_keywords):
+            counters['Books'] += 1
 
-        # Process each field and value
-        for field, value in zip(fields, values):
-            article_field = field.string.lower().strip()
+            # Check if the next field is 'book chapter' and has pages
+            next_field_index = fields.index(field) + 1
+            if next_field_index < len(fields):
+                next_article_field = fields[next_field_index].string.lower(
+                ).strip()
+                next_value = values[next_field_index]
 
-            # Handle citations-related keywords
-            if any(keyword in article_field for keyword in citations_keywords):
-                if value:
-                    match = re.search(r'Cited by (\d+)', str(value))
-                    if match:
-                        cited_by_number = match.group(1)
-                        counters['Citation Count'] += int(cited_by_number)
+                # Check if the next field is a book chapter and only count it as a book chapter
+                if any(keyword in next_article_field for keyword in book_chapter_keywords) and str(next_value):
+                    counters['Book Chapters'] += 1
+                    counters['Books'] -= 1
+            continue
 
-                    # If no 'Cited by' number is found, manual inspection is required
-                    else:
-                        return counters, 5
+        # Handle patent-related keywords
+        elif any(keyword in article_field for keyword in patent_keywords):
+            counters['Patent'] += 1
+            continue
 
-            # Check for ignored fields
-            if any(ignored_keyword in article_field for ignored_keyword in ignored_keywords):
-                continue
+        # Handle cases that don't match any known keyword
+        if not (any(keyword in article_field for keyword in (citations_keywords | preprint_keywords | journal_keywords | conference_keywords | book_keywords | patent_keywords)) or
+                any(keyword in str(value) for keyword in (conference_keywords | preprint_keywords))):
+            return counters, 4
 
-            # Handle conference-related keywords
-            elif any(keyword in article_field for keyword in conference_keywords) or (value and any(keyword in str(value) for keyword in conference_keywords)):
-                counters['Conference Papers'] += 1
-                continue
-
-            # Handle preprint-related keywords
-            elif value and any(keyword in str(value) for keyword in preprint_keywords):
-                counters['arXiv Preprint'] += 1
-                continue
-
-            # Handle journal-related keywords
-            elif any(keyword in article_field for keyword in journal_keywords) and 'preprint' not in str(value):
-                counters['Peer Reviewed Articles'] += 1
-                continue
-
-            # Handle book-related keywords
-            elif any(keyword in article_field for keyword in book_keywords):
-                counters['Books'] += 1
-
-                # Check if the next field is 'book chapter' and has pages
-                next_field_index = fields.index(field) + 1
-                if next_field_index < len(fields):
-                    next_article_field = fields[next_field_index].string.lower(
-                    ).strip()
-                    next_value = values[next_field_index]
-
-                    # Check if the next field is a book chapter and only count it as a book chapter
-                    if any(keyword in next_article_field for keyword in book_chapter_keywords) and str(next_value):
-                        counters['Book Chapters'] += 1
-                        counters['Books'] -= 1
-                continue
-
-            # Handle patent-related keywords
-            elif any(keyword in article_field for keyword in patent_keywords):
-                counters['Patent'] += 1
-                continue
-
-            # Handle cases that don't match any known keyword
-            if not (any(keyword in article_field for keyword in (citations_keywords | preprint_keywords | journal_keywords | conference_keywords | book_keywords | patent_keywords)) or
-                    any(keyword in str(value) for keyword in (conference_keywords | preprint_keywords))):
-                return counters, 4
-
-        print(f"Checkpoint 7: Article was scraped successfully:\t\t\t\t\tGood")
-        return counters, 1
-
-    except requests.RequestException as e:
-        print(
-            f"Checkpoint 7: Error fetching data from article: Bad\nProblematic URL:\n\"{e}\"")
-        return counters, 3
-
-
-def process_urls(input_file, output_file):
-    """Function to process a list of URLs"""
-
-    since_input_year = input_year - 4
-
-    # Read the URLs from the input file
-    with open(input_file, 'r') as file:
-        urls = file.read().splitlines()
-
-    # Write the header row to the CSV file
-    with open(output_file, 'w', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow([
-            'Full Name', 'Link', 'Google Scholar',
-            f'Citation Count {input_year}',
-            f'H-Index Since {since_input_year}', 'H-Index Overall',
-            f'Peer Reviewed Articles {input_year}',
-            f'arXiv Preprint {input_year}',
-            f'Books {input_year}',
-            f'Book Chapters {input_year}',
-            f'Conference Papers {input_year}',
-            f'Patent {input_year}',
-            'Total Citations',
-            f'Average Citations per Researcher in {input_year}',
-            f'Average H-Index Since {since_input_year} per Researcher',
-            'Average Overall H-Index',
-            'Total Peer Reviewed Articles',
-            'Average Peer Reviewed Publications per Researcher',
-            'Total Conference Papers'
-        ])
-
-        print("PROCESS HAS BEGUN SCRAPING")
-
-        # Process each URL
-        for url in urls:
-            time.sleep(random.uniform(1, 3))
-            profile_data = scrape_profile(url)
-
-            if profile_data:
-                writer.writerow([
-                    profile_data.get('Full Name', ''),
-                    url,
-                    "Yes",
-                    profile_data.get('Citation Count', ''),
-                    profile_data.get('H-Index Since', ''),
-                    profile_data.get('H-Index Overall', ''),
-                    profile_data.get('Peer Reviewed Articles', ''),
-                    profile_data.get('arXiv Preprint', ''),
-                    profile_data.get('Books', ''),
-                    profile_data.get('Book Chapters', ''),
-                    profile_data.get('Conference Papers', ''),
-                    profile_data.get('Patent', ''),
-                ])
-
-    print("\n\nPROCESS COMPLETED SUCCESSFULLY\n\n")
+    print(f"Checkpoint 7: Article was scraped successfully:\t\t\t\t\tGood")
+    return counters, 1
 
 
 input_file = 'urls.txt'  # File containing list of URLs
