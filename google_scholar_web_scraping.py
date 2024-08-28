@@ -24,44 +24,6 @@ def determine_year(year_file):
             f"Checkpoint 0: Year data not found: Bad\nProblematic year.txt input:\n\"{input_year}\"")
 
 
-def create_summary(summary_data):
-    num_profiles = summary_data['num_profiles']
-
-    # Calculate averages
-    average_citations_per_researcher = summary_data['total_citations'] / \
-        num_profiles if num_profiles else 0
-    average_h_index_since = summary_data['total_h_index_since'] / \
-        num_profiles if num_profiles else 0
-    average_overall_h_index = summary_data['total_h_index_overall'] / \
-        num_profiles if num_profiles else 0
-    average_peer_reviewed_publications = summary_data['total_peer_reviewed_articles'] / \
-        num_profiles if num_profiles else 0
-
-    # Write the header row to the CSV file
-    with open(summary_file, 'w', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow([
-            'Total Citations of all Profiles',
-            f'Average Citations per Researcher in {input_year}',
-            f'Average H-Index Since {since_input_year} per Researcher',
-            'Average Overall H-Index',
-            'Total Peer Reviewed Articles',
-            'Average Peer Reviewed Publications per Researcher',
-            'Total Conference Papers'
-        ])
-
-        # Write the calculated data to the CSV
-        writer.writerow([
-            summary_data['total_citations'],
-            average_citations_per_researcher,
-            average_h_index_since,
-            average_overall_h_index,
-            summary_data['total_peer_reviewed_articles'],
-            average_peer_reviewed_publications,
-            summary_data['total_conference_papers']
-        ])
-
-
 def update_summary(summary_data, profile_data):
     # Extract data from the profile
     total_citations = int(profile_data.get('Citation Count of Year Period', 0))
@@ -109,7 +71,7 @@ def process_urls(input_file, output_file):
             'Average Peer Reviewed Publications per Researcher',
             'Total Conference Papers'
         ])
-        
+
         summary_data = {
             'total_citations': 0,
             'total_h_index_since': 0,
@@ -197,7 +159,11 @@ def scrape_profile(url):
             'Citation Count of Year Period': None,
             'Total Citations of the Profile': None
         }
-
+        full_name = profile_data.get('Full Name', '')
+        print(f"\n*********************************************************")
+        print(f"Full name scan for {full_name} has started.")
+        print(f"*********************************************************\n")
+        
         profile_data['H-Index Overall'], profile_data['H-Index Since'] = extract_h_index_values(
             doc, url)
         profile_data['Citation Count of Year Period'] = extract_citation_count_of_year(
@@ -269,6 +235,11 @@ def scrape_profile(url):
 
         if test_mode:
             print(f"\nCheckpoint 6: Returned after scraping from profile:\tGood\n")
+
+        full_name = profile_data.get('Full Name', '')
+        print(f"*********************************************************")
+        print(f"Full name scan for {full_name} is complete.")
+        print(f"*********************************************************")
 
         return profile_data
 
@@ -476,16 +447,13 @@ def scrape_article(article_url, counters):
         values = doc.find_all('div', class_='gsc_oci_value')
         date = None
 
-        for field, value in zip(fields, values):
-            if field.string and 'publication date' in field.string.strip().lower():
-                date = value.string.strip() if value.string else value.get_text(strip=True)
-                break
+        year, month = process_date(fields, values, date)
 
-        year, month = process_date(date)
         if year is None or month is None:
             return counters, 2
 
         status_code = validate_publication_date(year, month, input_year)
+
         if status_code != 1:
             return counters, status_code
 
@@ -497,17 +465,16 @@ def scrape_article(article_url, counters):
         return counters, 3
 
 
-def process_date(date):
+def process_date(fields, values, date):
     """
-    Processes a date string and extracts the year and month.
-
-    Args:
-        date (str): The date string in the format 'YYYY/MM/DD' or 'YYYY/MM'.
-
-    Returns:
-        tuple: A tuple containing the year and month as integers.
-               If the date format is invalid or the date is None, returns (None, None).
+    Processes the publication date of an article.
     """
+
+    for field, value in zip(fields, values):
+        if field.string and 'publication date' in field.string.strip().lower():
+            date = value.string.strip() if value.string else value.get_text(strip=True)
+            break
+
     if date and date.count('/') == 2:
         year, month, _ = date.split('/')
         return int(year), int(month)
@@ -615,6 +582,44 @@ def process_article_fields(fields, values, counters):
     if test_mode:
         print(f"Checkpoint 7: Article was scraped successfully:\t\t\t\t\tGood")
     return counters, 1
+
+
+def create_summary(summary_data):
+    num_profiles = summary_data['num_profiles']
+
+    # Calculate averages
+    average_citations_per_researcher = summary_data['total_citations'] / \
+        num_profiles if num_profiles else 0
+    average_h_index_since = summary_data['total_h_index_since'] / \
+        num_profiles if num_profiles else 0
+    average_overall_h_index = summary_data['total_h_index_overall'] / \
+        num_profiles if num_profiles else 0
+    average_peer_reviewed_publications = summary_data['total_peer_reviewed_articles'] / \
+        num_profiles if num_profiles else 0
+
+    # Write the header row to the CSV file
+    with open(summary_file, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow([
+            'Total Citations of all Profiles',
+            f'Average Citations per Researcher in {input_year}',
+            f'Average H-Index Since {since_input_year} per Researcher',
+            'Average Overall H-Index',
+            'Total Peer Reviewed Articles',
+            'Average Peer Reviewed Publications per Researcher',
+            'Total Conference Papers'
+        ])
+
+        # Write the calculated data to the CSV
+        writer.writerow([
+            summary_data['total_citations'],
+            average_citations_per_researcher,
+            average_h_index_since,
+            average_overall_h_index,
+            summary_data['total_peer_reviewed_articles'],
+            average_peer_reviewed_publications,
+            summary_data['total_conference_papers']
+        ])
 
 
 input_file = 'urls.txt'  # File containing list of URLs
