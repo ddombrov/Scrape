@@ -145,13 +145,11 @@ If you get an error code informing you of too many scrapes or something then jus
 
 1. **Incorporate Clicking:**
    Add Selenium/AJAX functionality to be able to click "Read more" and handle more than 20 articles.
-2. **Remove Weird Characters from Names:**
-Minglun currently crashes it due to foreign characters
-3. **Trim the Name:**
+2. **Trim the Name:**
 Remove PhD, etc. from names
-4. **Inform User More:**
+3. **Inform User More:**
 Inform user when started, done profile, and done all
-5. **Update URLS automatically:**
+4. **Update URLS automatically:**
 For example, Gary's was https://scholar.google.com/citations?user=O2yw-uoAAAAJ&hl=en and is now https://scholar.google.com/citations?user=wl3BrEUAAAAJ&hl=en (program cannot handle this)
-6. **Remove Year Period Total**
+5. **Remove Year Period Total**
 Only need total for "Citations"

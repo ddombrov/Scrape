@@ -4,11 +4,12 @@ import csv
 import time
 import random
 import re
+import sys
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 from keywords import (conference_keywords, ignored_keywords, citations_keywords,
                       preprint_keywords, journal_keywords, book_keywords,
                       book_chapter_keywords, patent_keywords)
-
+sys.stdout.reconfigure(encoding='utf-8')
 
 def determine_year(year_file):
     """Function to determine the year to extract from the Google Scholar profiles"""
@@ -49,7 +50,7 @@ def process_urls(input_file, output_file):
         urls = file.read().splitlines()
 
     # Write the header row to the CSV file
-    with open(output_file, 'w', newline='') as csvfile:
+    with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow([
             'Full Name', 'Link', 'Google Scholar',
@@ -102,19 +103,19 @@ def process_url(url, writer):
 
     if profile_data is not None:
         writer.writerow([
-            profile_data.get('Full Name', ''),
-            url,
+            str(profile_data.get('Full Name', '')).encode('utf-8', 'ignore').decode('utf-8'),
+            str(url).encode('utf-8', 'ignore').decode('utf-8'),
             "Yes",
-            profile_data.get('Citation Count of Year Period', ''),
-            profile_data.get('H-Index Since', ''),
-            profile_data.get('H-Index Overall', ''),
-            profile_data.get('Peer Reviewed Articles', ''),
-            profile_data.get('arXiv Preprint', ''),
-            profile_data.get('Books', ''),
-            profile_data.get('Book Chapters', ''),
-            profile_data.get('Conference Papers', ''),
-            profile_data.get('Patent', ''),
-            profile_data.get('Total Citations of the Profile', ''),
+            str(profile_data.get('Citation Count of Year Period', '')).encode('utf-8', 'ignore').decode('utf-8'),
+            str(profile_data.get('H-Index Since', '')).encode('utf-8', 'ignore').decode('utf-8'),
+            str(profile_data.get('H-Index Overall', '')).encode('utf-8', 'ignore').decode('utf-8'),
+            str(profile_data.get('Peer Reviewed Articles', '')).encode('utf-8', 'ignore').decode('utf-8'),
+            str(profile_data.get('arXiv Preprint', '')).encode('utf-8', 'ignore').decode('utf-8'),
+            str(profile_data.get('Books', '')).encode('utf-8', 'ignore').decode('utf-8'),
+            str(profile_data.get('Book Chapters', '')).encode('utf-8', 'ignore').decode('utf-8'),
+            str(profile_data.get('Conference Papers', '')).encode('utf-8', 'ignore').decode('utf-8'),
+            str(profile_data.get('Patent', '')).encode('utf-8', 'ignore').decode('utf-8'),
+            str(profile_data.get('Total Citations of the Profile', '')).encode('utf-8', 'ignore').decode('utf-8'),
         ])
 
         return profile_data
