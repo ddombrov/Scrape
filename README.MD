@@ -151,9 +151,7 @@ Minglun currently crashes it due to foreign characters
 Remove PhD, etc. from names
 4. **Inform User More:**
 Inform user when started, done profile, and done all
-5. **Make Manual Inspection Nicer:**
-Manual inspection should be less of a headache
-6. **Update URLS automatically:**
+5. **Update URLS automatically:**
 For example, Gary's was https://scholar.google.com/citations?user=O2yw-uoAAAAJ&hl=en and is now https://scholar.google.com/citations?user=wl3BrEUAAAAJ&hl=en (program cannot handle this)
-7. **Remove Year Period Total**
+6. **Remove Year Period Total**
 Only need total for "Citations"
