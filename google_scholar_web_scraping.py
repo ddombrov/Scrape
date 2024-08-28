@@ -71,6 +71,7 @@ def process_url(url, writer):
             profile_data.get('Book Chapters', ''),
             profile_data.get('Conference Papers', ''),
             profile_data.get('Patent', ''),
+            profile_data.get('Total Citations', ''),
         ])
 
 
@@ -101,25 +102,24 @@ def scrape_profile(url):
         doc = BeautifulSoup(result.text, 'html.parser')
 
         # Initialize the profile data
-        profile_data = {}
-
-        profile_data['Full Name'] = extract_google_scholar_name(doc, url)
+        profile_data = {
+            'Full Name': extract_google_scholar_name(doc, url),
+            'H-Index Overall': None,
+            'H-Index Since': None,
+            'Citation Count': None,
+            'Total Citations': None
+        }
 
         profile_data['H-Index Overall'], profile_data['H-Index Since'] = extract_h_index_values(
             doc, url)
-
         profile_data['Citation Count'] = extract_citation_count_of_year(
             doc, url)
-
         profile_data['Total Citations'] = extract_total_citation_count(
             doc, url)
-
         article_urls = extract_article_urls(doc, url)
 
         # Initialize counters
         counters = {
-            'Citation Count': 0,
-            'Total Citations': 0,
             'Peer Reviewed Articles': 0,
             'arXiv Preprint': 0,
             'Books': 0,
@@ -132,26 +132,25 @@ def scrape_profile(url):
 
         # Process each article URL
         for article_url in article_urls:
+
             time.sleep(2)  # Rate limit
             article_number += 1
             return_status = 1
             old_counters = counters.copy()
             counters, return_status = scrape_article(article_url, counters)
 
+            # If more than 20 articles are found, manual inspection is required
+            if article_number == 20:
+                print(
+                    f"\nMANUAL INSPECTION REQUIRED:\nMore than 20 articles found (first 20 have been examined, the rest you will need to): Bad\nProblematic profile URL:\n{url}\n")
+
             # If the valid articles have all been processed, break the loop
             if return_status == 0:
                 break
 
-            elif return_status == 1:
-
-                # If more than 20 articles are found, manual inspection is required
-                if article_number == 20:
-                    print(
-                        f"\nMANUAL INSPECTION REQUIRED:\nMore than 20 articles found: Bad\nProblematic profile URL:\n{url}\n")
-
-                # In the case the count was supposed to go up and didn't, manual inspection is required
-                if counters == old_counters:
-                    print(
+            # In the case the count was supposed to go up and didn't, manual inspection is required
+            elif return_status == 1 and counters == old_counters:
+                print(
                         f"\nMANUAL INSPECTION REQUIRED:\nNo counts updated: Bad\nProblematic URL:\n{article_url}\n")
 
                 if test_mode:
@@ -159,24 +158,22 @@ def scrape_profile(url):
 
             # If the date format is invalid, manual inspection is required
             elif return_status == 2:
-                counters = old_counters
+
                 print(
                     f"\nMANUAL INSPECTION REQUIRED:\nDate format invalid: Bad\nProblematic URL:\n{article_url}\n")
 
             # If there is an error fetching data from the article, manual inspection is required
             elif return_status == 3:
-                counters = old_counters
                 print(
                     f"\nMANUAL INSPECTION REQUIRED:\nError fetching data from article: Bad\nProblematic URL:\n{article_url}\n")
 
             # If an unrecognized article_field is found, manual inspection is required
             elif return_status == 4:
-                counters = old_counters
                 print(
                     f"\nMANUAL INSPECTION REQUIRED:\nUnrecognized article_field: Bad\nProblematic URL:\n{article_url}\n")
 
-            # If the publication date is not in the correct range, skip the article
-            elif return_status == 5:
+            # If the article had an issue/skipped then revert to the old counters
+            elif return_status == 2 or return_status == 3 or return_status == 4 or return_status == 5:
                 counters = old_counters
 
         # Add the counters to the profile data
@@ -537,5 +534,6 @@ input_file = 'urls.txt'  # File containing list of URLs
 output_file = 'output.csv'  # File to save the results
 input_year = 2023  # Year to extract (ex. put 2023 for May 2023 - April 2024)
 test_mode = False  # Set to True to enable test mode
+
 # Run the process
 process_urls(input_file, output_file)
