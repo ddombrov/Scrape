@@ -41,12 +41,14 @@ def process_urls(input_file, output_file):
             'Total Conference Papers'
         ])
 
-        print("PROCESS HAS BEGUN SCRAPING")
+        if test_mode:
+            print("PROCESS HAS BEGUN SCRAPING")
 
         for url in urls:
             process_url(url, writer)
 
-    print("\n\nPROCESS COMPLETED SUCCESSFULLY\n\n")
+    if test_mode:
+        print("\n\nPROCESS COMPLETED SUCCESSFULLY\n\n")
 
 
 def process_url(url, writer):
@@ -55,7 +57,7 @@ def process_url(url, writer):
     time.sleep(random.uniform(1, 3))
     profile_data = scrape_profile(url)
 
-    if profile_data:
+    if profile_data is not None:
         writer.writerow([
             profile_data.get('Full Name', ''),
             url,
@@ -83,7 +85,8 @@ def scrape_profile(url):
             f"Checkpoint 2: URL data is empty: Bad\nProblematic URL:\n\"{url}\"")
         return None
     else:
-        print(f"Checkpoint 2: URL data is not empty:\t\t\t\t\t\t\tGood")
+        if test_mode:
+            print(f"Checkpoint 2: URL data is not empty:\t\t\t\t\t\t\tGood")
 
     # Set the headers for the request
     headers = {
@@ -105,11 +108,18 @@ def scrape_profile(url):
         profile_data['H-Index Overall'], profile_data['H-Index Since'] = extract_h_index_values(
             doc, url)
 
+        profile_data['Citation Count'] = extract_citation_count_of_year(
+            doc, url)
+
+        profile_data['Total Citations'] = extract_total_citation_count(
+            doc, url)
+
         article_urls = extract_article_urls(doc, url)
 
         # Initialize counters
         counters = {
             'Citation Count': 0,
+            'Total Citations': 0,
             'Peer Reviewed Articles': 0,
             'arXiv Preprint': 0,
             'Books': 0,
@@ -117,6 +127,7 @@ def scrape_profile(url):
             'Conference Papers': 0,
             'Patent': 0
         }
+
         article_number = 0
 
         # Process each article URL
@@ -143,7 +154,8 @@ def scrape_profile(url):
                     print(
                         f"\nMANUAL INSPECTION REQUIRED:\nNo counts updated: Bad\nProblematic URL:\n{article_url}\n")
 
-                print("\nNew Counts:\n", counters, "\n")
+                if test_mode:
+                    print("\nNew Counts:\n", counters, "\n")
 
             # If the date format is invalid, manual inspection is required
             elif return_status == 2:
@@ -163,21 +175,16 @@ def scrape_profile(url):
                 print(
                     f"\nMANUAL INSPECTION REQUIRED:\nUnrecognized article_field: Bad\nProblematic URL:\n{article_url}\n")
 
-            # If no 'Cited by' number is found, manual inspection is required
+            # If the publication date is not in the correct range, skip the article
             elif return_status == 5:
-                counters = old_counters
-                print(
-                    f"\nMANUAL INSPECTION REQUIRED:\nNo 'Cited by' number found: Bad\nProblematic URL:\n{article_url}\n")
-
-            # If the publication date is not in the correct range, manual inspection is required
-            elif return_status == 6:
                 counters = old_counters
 
         # Add the counters to the profile data
         for key, value in counters.items():
             profile_data[key] = value
 
-        print(f"\nCheckpoint 6: Returned after scraping from profile:\tGood\n")
+        if test_mode:
+            print(f"\nCheckpoint 6: Returned after scraping from profile:\tGood\n")
 
         return profile_data
 
@@ -195,7 +202,9 @@ def transform_url(original_url):
             f"\n\n\n\n\nPROFILE:\nCheckpoint 1: Invalid URL scheme: Bad\nProblematic URL:\n\"{original_url}\"")
         return None
     else:
-        print(f"\n\n\n\n\nPROFILE:\nCheckpoint 1: Valid URL scheme:\t\t\t\t\t\t\t\t\tGood")
+        if test_mode:
+            print(
+                f"\n\n\n\n\nPROFILE:\nCheckpoint 1: Valid URL scheme:\t\t\t\t\t\t\t\t\tGood")
 
     parsed_url = urlparse(original_url)
     query_params = parse_qs(parsed_url.query)
@@ -231,7 +240,8 @@ def extract_google_scholar_name(doc, url):
     """
     name = doc.find(id="gsc_prf_in")
     if name:
-        print(f"Checkpoint 3: Name was located:\t\t\t\t\t\t\t\t\tGood")
+        if test_mode:
+            print(f"Checkpoint 3: Name was located:\t\t\t\t\t\t\t\t\tGood")
         return name.string
     else:
         print(
@@ -256,12 +266,69 @@ def extract_h_index_values(doc, url):
         td_elements = parent.find_all('td')
         h_index_overall = td_elements[-2].get_text(strip=True)
         h_index_since = td_elements[-1].get_text(strip=True)
-        print(f"Checkpoint 4: H-indices found:\t\t\t\t\t\t\t\t\tGood")
+        if test_mode:
+            print(f"Checkpoint 4: H-indices found:\t\t\t\t\t\t\t\t\tGood")
         return h_index_overall, h_index_since
     else:
         print(
             f"Checkpoint 4: H-indices not found: Bad\nProblematic URL:\n\"{url}\"")
         return None, None
+
+
+def extract_citation_count_of_year(doc, url):
+    """
+    Extracts the citation count for a given year from a Google Scholar document.
+    Parameters:
+    - doc: BeautifulSoup object representing the HTML document of the Google Scholar page.
+    - url: URL of the Google Scholar page.
+    Returns:
+    - The citation count for the given year if it exists, otherwise None.
+    """
+
+    # Extract years and values
+    years = [span.get_text()
+             for span in doc.find_all('span', class_='gsc_g_t')]
+    values = [a.find('span', class_='gsc_g_al').get_text()
+              for a in doc.find_all('a', class_='gsc_g_a')]
+
+    # Find the value of the year
+    year_index = years.index(str(input_year)) if str(
+        input_year) in years else None
+    year_value = values[year_index]
+
+    if year_index is not None and year_index < len(values):
+        if test_mode:
+            print(f"Checkpoint 9: Citation count data found:\t\t\t\t\t\t\tGood")
+        return year_value
+    else:
+        print(
+            f"Checkpoint 9: Citation count data not found: Bad\nProblematic URL:\n\"{url}\"")
+        return None
+
+
+def extract_total_citation_count(doc, url):
+    """
+    Extracts the total citation count from a Google Scholar document.
+    Parameters:
+    - doc: BeautifulSoup object representing the HTML document of the Google Scholar page.
+    - url: URL of the Google Scholar page.
+    Returns:
+    - The citation count for the given year if it exists, otherwise None.
+    """
+
+    total_value = doc.find_all(string="Citations")
+    if total_value:
+        parent = total_value[0].parent.parent.parent
+        td_elements = parent.find_all('td')
+        total_value = td_elements[-2].get_text(strip=True)
+        if test_mode:
+            print(
+                f"Checkpoint 10: Total citation count data found:\t\t\t\t\t\t\t\t\tGood")
+        return total_value
+    else:
+        print(
+            f"Checkpoint 10: Total citation count data not found: Bad\nProblematic URL:\n\"{url}\"")
+        return total_value
 
 
 def extract_article_urls(doc, url):
@@ -294,7 +361,8 @@ def extract_article_urls(doc, url):
 
     # Check if article URLs were found
     if article_urls:
-        print(f"Checkpoint 5: Article URL data found:\t\t\t\t\t\t\tGood")
+        if test_mode:
+            print(f"Checkpoint 5: Article URL data found:\t\t\t\t\t\t\tGood")
     else:
         print(
             f"Checkpoint 5: Article URL data not found: Bad\nProblematic URL:\n\"{url}\"")
@@ -379,7 +447,7 @@ def validate_publication_date(year, month, input_year):
     Returns:
         int: A status code representing the validation result:
              - 0: If the publication date is before the input year.
-             - 6: If the publication date is not in the correct range.
+             - 5: If the publication date is not in the correct range.
              - 1: If the publication date is valid and in the correct range.
     """
     # Check if the publication date is before the input year
@@ -388,10 +456,14 @@ def validate_publication_date(year, month, input_year):
 
     # Check if the publication date is in the correct range
     if not ((year == input_year and month >= 5) or (year == input_year + 1 and month < 5)):
-        print(f"Checkpoint 8: Publication date is not in the correct range:\t\tArticle skipped")
-        return 6
+        if test_mode:
+            print(
+                f"Checkpoint 8: Publication date is not in the correct range:\t\tArticle skipped")
+        return 5
 
-    print(f"Checkpoint 8: Publication date is in the correct range:\t\t\tArticle accepted")
+    if test_mode:
+        print(
+            f"Checkpoint 8: Publication date is in the correct range:\t\t\tArticle accepted")
     return 1
 
 
@@ -409,16 +481,6 @@ def process_article_fields(fields, values, counters):
     """
     for field, value in zip(fields, values):
         article_field = field.string.lower().strip()
-
-        # Handle citations-related keywords
-        if any(keyword in article_field for keyword in citations_keywords):
-            if value:
-                match = re.search(r'Cited by (\d+)', str(value))
-                if match:
-                    cited_by_number = match.group(1)
-                    counters['Citation Count'] += int(cited_by_number)
-                else:
-                    return counters, 5
 
         # Check for ignored fields
         if any(ignored_keyword in article_field for ignored_keyword in ignored_keywords):
@@ -466,13 +528,14 @@ def process_article_fields(fields, values, counters):
                 any(keyword in str(value) for keyword in (conference_keywords | preprint_keywords))):
             return counters, 4
 
-    print(f"Checkpoint 7: Article was scraped successfully:\t\t\t\t\tGood")
+    if test_mode:
+        print(f"Checkpoint 7: Article was scraped successfully:\t\t\t\t\tGood")
     return counters, 1
 
 
 input_file = 'urls.txt'  # File containing list of URLs
 output_file = 'output.csv'  # File to save the results
 input_year = 2023  # Year to extract (ex. put 2023 for May 2023 - April 2024)
-
+test_mode = False  # Set to True to enable test mode
 # Run the process
 process_urls(input_file, output_file)
