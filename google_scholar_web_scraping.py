@@ -24,10 +24,63 @@ def determine_year(year_file):
             f"Checkpoint 0: Year data not found: Bad\nProblematic year.txt input:\n\"{input_year}\"")
 
 
+def create_summary(summary_data):
+    num_profiles = summary_data['num_profiles']
+
+    # Calculate averages
+    average_citations_per_researcher = summary_data['total_citations'] / \
+        num_profiles if num_profiles else 0
+    average_h_index_since = summary_data['total_h_index_since'] / \
+        num_profiles if num_profiles else 0
+    average_overall_h_index = summary_data['total_h_index_overall'] / \
+        num_profiles if num_profiles else 0
+    average_peer_reviewed_publications = summary_data['total_peer_reviewed_articles'] / \
+        num_profiles if num_profiles else 0
+
+    # Write the header row to the CSV file
+    with open(summary_file, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow([
+            'Total Citations of all Profiles',
+            f'Average Citations per Researcher in {input_year}',
+            f'Average H-Index Since {since_input_year} per Researcher',
+            'Average Overall H-Index',
+            'Total Peer Reviewed Articles',
+            'Average Peer Reviewed Publications per Researcher',
+            'Total Conference Papers'
+        ])
+
+        # Write the calculated data to the CSV
+        writer.writerow([
+            summary_data['total_citations'],
+            average_citations_per_researcher,
+            average_h_index_since,
+            average_overall_h_index,
+            summary_data['total_peer_reviewed_articles'],
+            average_peer_reviewed_publications,
+            summary_data['total_conference_papers']
+        ])
+
+
+def update_summary(summary_data, profile_data):
+    # Extract data from the profile
+    total_citations = int(profile_data.get('Citation Count of Year Period', 0))
+    h_index_since = int(profile_data.get('H-Index Since', 0))
+    h_index_overall = int(profile_data.get('H-Index Overall', 0))
+    peer_reviewed_articles = int(profile_data.get('Peer Reviewed Articles', 0))
+    conference_papers = int(profile_data.get('Conference Papers', 0))
+
+    # Update the summary data
+    summary_data['total_citations'] += total_citations
+    summary_data['total_h_index_since'] += h_index_since
+    summary_data['total_h_index_overall'] += h_index_overall
+    summary_data['total_peer_reviewed_articles'] += peer_reviewed_articles
+    summary_data['total_conference_papers'] += conference_papers
+    summary_data['num_profiles'] += 1
+
+
 def process_urls(input_file, output_file):
     """Function to process a list of URLs"""
-
-    since_input_year = input_year - 4
 
     # Read the URLs from the input file
     with open(input_file, 'r') as file:
@@ -56,69 +109,24 @@ def process_urls(input_file, output_file):
             'Average Peer Reviewed Publications per Researcher',
             'Total Conference Papers'
         ])
+        
+        summary_data = {
+            'total_citations': 0,
+            'total_h_index_since': 0,
+            'total_h_index_overall': 0,
+            'total_peer_reviewed_articles': 0,
+            'total_conference_papers': 0,
+            'num_profiles': 0
+        }
 
         if test_mode:
             print("PROCESS HAS BEGUN SCRAPING")
 
         for url in urls:
-            process_url(url, writer)
+            profile_data = process_url(url, writer)
+            update_summary(summary_data, profile_data)
 
-        writer.writerow([
-            'Full Name', 'Link', 'Google Scholar',
-            f'Citation Count of Year Period {input_year}',
-            f'H-Index Since {since_input_year}', 'H-Index Overall',
-            f'Peer Reviewed Articles {input_year}',
-            f'arXiv Preprint {input_year}',
-            f'Books {input_year}',
-            f'Book Chapters {input_year}',
-            f'Conference Papers {input_year}',
-            f'Patent {input_year}',
-            'Total Citations of the Profile',
-            'Year Period Citations of all Profiles',
-            'Total Citations of all Profiles',
-            f'Average Citations per Researcher in {input_year}',
-            f'Average H-Index Since {since_input_year} per Researcher',
-            'Average Overall H-Index',
-            'Total Peer Reviewed Articles',
-            'Average Peer Reviewed Publications per Researcher',
-            'Total Conference Papers'
-        ])
-
-        total_year_period_citations = 0
-        total_citations_of_all_profiles = 0
-        total_peer_reviewed_articles = 0
-        total_conference_papers_of_all_profiles = 0
-        average_citations_per_researcher_in_input_year = 0
-        average_peer_reviewed_publications_per_researcher = 0
-        average_h_index_since_input_year_per_researcher = 0
-        average_overall_h_index = 0
-        
-        # average_citations_per_researcher_in_input_year = total_citations / total_profiles if total_profiles else 0
-        # average_h_index_since_input_year_per_researcher = total_h_index_since / total_profiles if total_profiles else 0
-        # average_overall_h_index = total_h_index_overall / total_profiles if total_profiles else 0
-        # average_peer_reviewed_publications_per_researcher = total_peer_reviewed_articles / total_profiles if total_profiles else 0
-
-
-        writer.writerow([
-            'Full Name', 'Link', 'Google Scholar',
-            f'Citation Count of Year Period {input_year}',
-            f'H-Index Since {since_input_year}', 'H-Index Overall',
-            f'Peer Reviewed Articles {input_year}',
-            f'arXiv Preprint {input_year}',
-            f'Books {input_year}',
-            f'Book Chapters {input_year}',
-            f'Conference Papers {input_year}',
-            f'Patent {input_year}',
-            'Total Citations of the Profile',
-            f'{total_year_period_citations}',
-            f'{total_citations_of_all_profiles}',
-            f'{total_peer_reviewed_articles}',
-            f'{total_conference_papers_of_all_profiles}',
-            f'{average_citations_per_researcher_in_input_year}',
-            f'{average_peer_reviewed_publications_per_researcher}',
-            f'{average_h_index_since_input_year_per_researcher}',
-            f'{average_overall_h_index}'
-        ])
+        create_summary(summary_data)
 
     if test_mode:
         print("\n\nPROCESS COMPLETED SUCCESSFULLY\n\n")
@@ -147,10 +155,12 @@ def process_url(url, writer):
             profile_data.get('Total Citations of the Profile', ''),
         ])
 
+        return profile_data
+
 
 def manual_inspection_required(issue, location_type, url):
     print(
-        f"\nMANUAL INSPECTION REQUIRED:\n{issue}: Bad\nProblematic {location_type} URL:\n{url}\n")
+        f"MANUAL INSPECTION REQUIRED:\n{issue}: Bad\nProblematic {location_type} URL:\n{url}\n\n")
 
 
 def scrape_profile(url):
@@ -609,9 +619,11 @@ def process_article_fields(fields, values, counters):
 
 input_file = 'urls.txt'  # File containing list of URLs
 output_file = 'output.csv'  # File to save the results
+summary_file = 'summary.csv'  # File to save the summary
 year_file = 'year.txt'  # File containing year to extract
 test_mode = False  # Set to True to enable test mode
 
 # Run the process
 input_year = determine_year(year_file)
+since_input_year = input_year - 4
 process_urls(input_file, output_file)

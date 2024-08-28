@@ -1,16 +1,16 @@
 # Google Scholar Web Scraping
 
-This project is designed to scrape Google Scholar using Python. The script fetches data such as h-index, citations, and other scholarly metrics.
+This project is designed to scrape Google Scholar using Python, allowing you to collect data such as the h-index, citations, and other scholarly metrics.
 
 ## Support
-Contact me, Daniel Dombrovsky, ddombrov@uoguelph.ca, in case of unfixable issues
+For any issues that cannot be resolved, please contact me, Daniel Dombrovsky, at ddombrov@uoguelph.ca.
 
-## Setting up the Files
-1. urls.txt should contain all urls you want to scrape
-2. year.txt should contain the year that you want to scrape
-ex. put 2023 for the period May 2023 - April 2024
-3. Upload output.csv to excel/google sheets
-4. log.txt will tell you what you need to manually inspect (manual inspoect for a profile means that you have to do the entire profile yourslef unless its over 20 articels error: meaning the first 20 have been done for you) and if article then you have to do the entire rticel. otherwise its all good.
+## Setting Up the Files
+1. urls.txt: This file should contain all the URLs you want to scrape.
+year.txt: Specify the year you want to scrape. For example, entering "2023" will scrape data for the period from May 2023 to April 2024.
+2. output.csv: After scraping, upload this file to Excel or Google Sheets for further analysis.
+3. log.txt: This file logs any issues that require manual inspection. If a profile needs manual review, you'll need to handle the entire profile yourself unless it exceeds 20 articles; in that case, the first 20 articles will be processed for you. For individual articles flagged in the log, you’ll need to complete the review manually. Otherwise, the scraping is considered complete.
+4. summary.csv: After scraping, this does the math for you
 
 ### Using the Scrape Online
 
