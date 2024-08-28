@@ -2,6 +2,11 @@
 
 This project is designed to scrape Google Scholar using Python. The script fetches data such as h-index, citations, and other scholarly metrics.
 
+## Setting up the Files
+1. urls.txt should contain all urls you want to scrape
+2. year.txt should contain the year that you want to scrape
+ex. put 2023 for the period May 2023 - April 2024
+
 ### Using the Scrape Online
 
 1. Create Accounts: Sign up for accounts on Replit and GitHub.

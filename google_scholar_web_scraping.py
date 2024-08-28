@@ -10,6 +10,20 @@ from keywords import (conference_keywords, ignored_keywords, citations_keywords,
                       book_chapter_keywords, patent_keywords)
 
 
+def determine_year(year_file):
+    """Function to determine the year to extract from the Google Scholar profiles"""
+
+    try:
+        with open(year_file, 'r') as file:
+            year = int(file.read())
+            if test_mode:
+                print(f"Checkpoint 0: Year data found:\t\t\t\t\t\t\t\t\t\tGood")
+            return year
+    except FileNotFoundError:
+        print(
+            f"Checkpoint 0: Year data not found: Bad\nProblematic year.txt input:\n\"{input_year}\"")
+
+
 def process_urls(input_file, output_file):
     """Function to process a list of URLs"""
 
@@ -74,6 +88,8 @@ def process_url(url, writer):
             profile_data.get('Total Citations', ''),
         ])
 
+def manual_inspection_required(issue, location_type, url):
+    print(f"\nMANUAL INSPECTION REQUIRED:\n{issue}: Bad\nProblematic {location_type} URL:\n{url}\n")
 
 def scrape_profile(url):
     """Function to scrape data from a profile"""
@@ -141,8 +157,7 @@ def scrape_profile(url):
 
             # If more than 20 articles are found, manual inspection is required
             if article_number == 20:
-                print(
-                    f"\nMANUAL INSPECTION REQUIRED:\nMore than 20 articles found (first 20 have been examined, the rest you will need to): Bad\nProblematic profile URL:\n{url}\n")
+                manual_inspection_required("More than 20 articles found (first 20 have been examined, the rest you will need to)", "profile", url)
 
             # If the valid articles have all been processed, break the loop
             if return_status == 0:
@@ -151,7 +166,7 @@ def scrape_profile(url):
             # In the case the count was supposed to go up and didn't, manual inspection is required
             elif return_status == 1 and counters == old_counters:
                 print(
-                        f"\nMANUAL INSPECTION REQUIRED:\nNo counts updated: Bad\nProblematic URL:\n{article_url}\n")
+                    f"\nMANUAL INSPECTION REQUIRED:\nNo counts updated: Bad\nProblematic URL:\n{article_url}\n")
 
                 if test_mode:
                     print("\nNew Counts:\n", counters, "\n")
@@ -532,8 +547,9 @@ def process_article_fields(fields, values, counters):
 
 input_file = 'urls.txt'  # File containing list of URLs
 output_file = 'output.csv'  # File to save the results
-input_year = 2023  # Year to extract (ex. put 2023 for May 2023 - April 2024)
+year_file = 'year.txt'  # File containing year to extract
 test_mode = False  # Set to True to enable test mode
 
 # Run the process
+input_year = determine_year(year_file)
 process_urls(input_file, output_file)
