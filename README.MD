@@ -56,7 +56,7 @@ For any unresolved issues, please contact me, Daniel Dombrovsky, at ddombrov@uog
 python google_scholar_web_scraping.py > log.txt 2>&1
 ```
 
-## Troubleshooting (If Running Locally)
+## Local Permissions Troubleshooting
 
 This explains how to enable activation if you run into an issue (Steps to Change the Execution Policy):
 
@@ -78,11 +78,12 @@ Get-ExecutionPolicy
 ```
 
 4.  **Confirm the Change:**
-Type Y when prompted.
+    Type Y when prompted.
 
-5.  **Try Activating the Virtual Environment Again: Once the execution policy is changed, you should be able to activate your virtual environment with:
+5.  **Try Activating the Virtual Environment Again:**
+    Once the execution policy is changed, you should be able to activate your virtual environment with:
 
-    Windows:
+        Windows:
 
 ```bash
     venv\Scripts\Activate
@@ -94,13 +95,17 @@ Type Y when prompted.
 source venv/bin/activate
 ```
 
-6.  Reverting the Execution Policy (Optional): If you want to revert the execution policy to its original state after activating the environment, you can do so by running: Set-ExecutionPolicy -ExecutionPolicy Restricted -Scope CurrentUser
+6.  **Reverting the Execution Policy (Optional):**
+    If you want to revert the execution policy to its original state after activating the environment, you can do so by running: Set-ExecutionPolicy -ExecutionPolicy Restricted -Scope CurrentUser
 
-**B: How to reactive python enviornment:**
+## Python Enviornment Activation Troubleshooting
 
-1.  Try deleting the current enviornment:
+How to reactive python enviornment
 
-    Windows:
+1.  **Delete the current enviornment:**
+    Try deleting the current enviornment:
+
+        Windows:
 
 ```bash
 rmdir venv
@@ -112,9 +117,10 @@ rmdir venv
 rm -rf venv
 ```
 
-2.  Reinstall the dependencies and setup the virtual enviornment:
+2.  **Reinstall the Dependencies:**
+    Reinstall the dependencies and setup the virtual enviornment:
 
-    Mac:
+        Mac:
 
 ```bash
     python -m venv venv
@@ -132,7 +138,22 @@ rm -rf venv
     pip install requests
 ```
 
+## Scraping Google Error Codes Troubleshooting
+If you get an error code informing you of too many scrapes or something then just wait some time. May need to be used 10 profiles at a time.
+
 ## To Do
 
-1. Incorporate Selenium:
-   Add Selenium functionality to be able to click "Read more" and handle more than 20 articles.
+1. **Incorporate Clicking:**
+   Add Selenium/AJAX functionality to be able to click "Read more" and handle more than 20 articles.
+2. **Remove Weird Characters from Names:**
+Minglun currently crashes it due to foreign characters
+3. **Trim the Name:**
+Remove PhD, etc. from names
+4. **Inform User More:**
+Inform user when started, done profile, and done all
+5. **Make Manual Inspection Nicer:**
+Manual inspection should be less of a headache
+6. **Update URLS automatically:**
+For example, Gary's was https://scholar.google.com/citations?user=O2yw-uoAAAAJ&hl=en and is now https://scholar.google.com/citations?user=wl3BrEUAAAAJ&hl=en (program cannot handle this)
+7. **Remove Year Period Total**
+Only need total for "Citations"
