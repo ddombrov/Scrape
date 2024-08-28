@@ -9,6 +9,8 @@ Contact me, Daniel Dombrovsky, ddombrov@uoguelph.ca, in case of unfixable issues
 1. urls.txt should contain all urls you want to scrape
 2. year.txt should contain the year that you want to scrape
 ex. put 2023 for the period May 2023 - April 2024
+3. Upload output.csv to excel/google sheets
+4. log.txt will tell you what you need to manually inspect (manual inspoect for a profile means that you have to do the entire profile yourslef unless its over 20 articels error: meaning the first 20 have been done for you) and if article then you have to do the entire rticel. otherwise its all good.
 
 ### Using the Scrape Online
 
@@ -152,3 +154,6 @@ rm -rf venv
     pip install beautifulsoup4
     pip install requests
 ```
+
+# To Do
+1. add seliumnum functionality to be able to click read more and handle more than 20 articles

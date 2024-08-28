@@ -63,6 +63,63 @@ def process_urls(input_file, output_file):
         for url in urls:
             process_url(url, writer)
 
+        writer.writerow([
+            'Full Name', 'Link', 'Google Scholar',
+            f'Citation Count of Year Period {input_year}',
+            f'H-Index Since {since_input_year}', 'H-Index Overall',
+            f'Peer Reviewed Articles {input_year}',
+            f'arXiv Preprint {input_year}',
+            f'Books {input_year}',
+            f'Book Chapters {input_year}',
+            f'Conference Papers {input_year}',
+            f'Patent {input_year}',
+            'Total Citations of the Profile',
+            'Year Period Citations of all Profiles',
+            'Total Citations of all Profiles',
+            f'Average Citations per Researcher in {input_year}',
+            f'Average H-Index Since {since_input_year} per Researcher',
+            'Average Overall H-Index',
+            'Total Peer Reviewed Articles',
+            'Average Peer Reviewed Publications per Researcher',
+            'Total Conference Papers'
+        ])
+
+        total_year_period_citations = 0
+        total_citations_of_all_profiles = 0
+        total_peer_reviewed_articles = 0
+        total_conference_papers_of_all_profiles = 0
+        average_citations_per_researcher_in_input_year = 0
+        average_peer_reviewed_publications_per_researcher = 0
+        average_h_index_since_input_year_per_researcher = 0
+        average_overall_h_index = 0
+        
+        # average_citations_per_researcher_in_input_year = total_citations / total_profiles if total_profiles else 0
+        # average_h_index_since_input_year_per_researcher = total_h_index_since / total_profiles if total_profiles else 0
+        # average_overall_h_index = total_h_index_overall / total_profiles if total_profiles else 0
+        # average_peer_reviewed_publications_per_researcher = total_peer_reviewed_articles / total_profiles if total_profiles else 0
+
+
+        writer.writerow([
+            'Full Name', 'Link', 'Google Scholar',
+            f'Citation Count of Year Period {input_year}',
+            f'H-Index Since {since_input_year}', 'H-Index Overall',
+            f'Peer Reviewed Articles {input_year}',
+            f'arXiv Preprint {input_year}',
+            f'Books {input_year}',
+            f'Book Chapters {input_year}',
+            f'Conference Papers {input_year}',
+            f'Patent {input_year}',
+            'Total Citations of the Profile',
+            f'{total_year_period_citations}',
+            f'{total_citations_of_all_profiles}',
+            f'{total_peer_reviewed_articles}',
+            f'{total_conference_papers_of_all_profiles}',
+            f'{average_citations_per_researcher_in_input_year}',
+            f'{average_peer_reviewed_publications_per_researcher}',
+            f'{average_h_index_since_input_year_per_researcher}',
+            f'{average_overall_h_index}'
+        ])
+
     if test_mode:
         print("\n\nPROCESS COMPLETED SUCCESSFULLY\n\n")
 
@@ -90,8 +147,11 @@ def process_url(url, writer):
             profile_data.get('Total Citations of the Profile', ''),
         ])
 
+
 def manual_inspection_required(issue, location_type, url):
-    print(f"\nMANUAL INSPECTION REQUIRED:\n{issue}: Bad\nProblematic {location_type} URL:\n{url}\n")
+    print(
+        f"\nMANUAL INSPECTION REQUIRED:\n{issue}: Bad\nProblematic {location_type} URL:\n{url}\n")
+
 
 def scrape_profile(url):
     """Function to scrape data from a profile"""
@@ -159,7 +219,8 @@ def scrape_profile(url):
 
             # If more than 20 articles are found, manual inspection is required
             if article_number == 20:
-                manual_inspection_required("More than 20 articles found (first 20 have been examined, the rest you will need to)", "profile", url)
+                manual_inspection_required(
+                    "More than 20 articles found (first 20 have been examined, the rest you will need to)", "profile", url)
 
             # If the valid articles have all been processed, break the loop
             if return_status == 0:
@@ -167,23 +228,27 @@ def scrape_profile(url):
 
             # In the case the count was supposed to go up and didn't, manual inspection is required
             elif return_status == 1 and counters == old_counters:
-                manual_inspection_required("No counts updated", "article", article_url)
+                manual_inspection_required(
+                    "No counts updated", "article", article_url)
 
                 if test_mode:
                     print("\nNew Counts:\n", counters, "\n")
 
             # If the date format is invalid, manual inspection is required
             elif return_status == 2:
-                manual_inspection_required("Date format invalid", "article", article_url)
+                manual_inspection_required(
+                    "Date format invalid", "article", article_url)
 
             # If there is an error fetching data from the article, manual inspection is required
             elif return_status == 3:
-                manual_inspection_required("Error fetching data from article", "article", article_url)
-                
+                manual_inspection_required(
+                    "Error fetching data from article", "article", article_url)
+
             # If an unrecognized article_field is found, manual inspection is required
             elif return_status == 4:
-                manual_inspection_required("Unrecognized article_field (type of article could not be dertermined so article was skipped)", "article", article_url)
-                
+                manual_inspection_required(
+                    "Unrecognized article_field (type of article could not be dertermined so article was skipped)", "article", article_url)
+
             # If the article had an issue/skipped then revert to the old counters
             elif return_status == 2 or return_status == 3 or return_status == 4 or return_status == 5:
                 counters = old_counters
