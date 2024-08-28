@@ -2,6 +2,9 @@
 
 This project is designed to scrape Google Scholar using Python. The script fetches data such as h-index, citations, and other scholarly metrics.
 
+## Support
+Contact me, Daniel Dombrovsky, ddombrov@uoguelph.ca, in case of unfixable issues
+
 ## Setting up the Files
 1. urls.txt should contain all urls you want to scrape
 2. year.txt should contain the year that you want to scrape

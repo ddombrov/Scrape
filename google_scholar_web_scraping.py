@@ -38,7 +38,7 @@ def process_urls(input_file, output_file):
         writer = csv.writer(csvfile)
         writer.writerow([
             'Full Name', 'Link', 'Google Scholar',
-            f'Citation Count {input_year}',
+            f'Citation Count of Year Period {input_year}',
             f'H-Index Since {since_input_year}', 'H-Index Overall',
             f'Peer Reviewed Articles {input_year}',
             f'arXiv Preprint {input_year}',
@@ -46,7 +46,9 @@ def process_urls(input_file, output_file):
             f'Book Chapters {input_year}',
             f'Conference Papers {input_year}',
             f'Patent {input_year}',
-            'Total Citations',
+            'Total Citations of the Profile',
+            'Year Period Citations of all Profiles',
+            'Total Citations of all Profiles',
             f'Average Citations per Researcher in {input_year}',
             f'Average H-Index Since {since_input_year} per Researcher',
             'Average Overall H-Index',
@@ -76,7 +78,7 @@ def process_url(url, writer):
             profile_data.get('Full Name', ''),
             url,
             "Yes",
-            profile_data.get('Citation Count', ''),
+            profile_data.get('Citation Count of Year Period', ''),
             profile_data.get('H-Index Since', ''),
             profile_data.get('H-Index Overall', ''),
             profile_data.get('Peer Reviewed Articles', ''),
@@ -85,7 +87,7 @@ def process_url(url, writer):
             profile_data.get('Book Chapters', ''),
             profile_data.get('Conference Papers', ''),
             profile_data.get('Patent', ''),
-            profile_data.get('Total Citations', ''),
+            profile_data.get('Total Citations of the Profile', ''),
         ])
 
 def manual_inspection_required(issue, location_type, url):
@@ -122,15 +124,15 @@ def scrape_profile(url):
             'Full Name': extract_google_scholar_name(doc, url),
             'H-Index Overall': None,
             'H-Index Since': None,
-            'Citation Count': None,
-            'Total Citations': None
+            'Citation Count of Year Period': None,
+            'Total Citations of the Profile': None
         }
 
         profile_data['H-Index Overall'], profile_data['H-Index Since'] = extract_h_index_values(
             doc, url)
-        profile_data['Citation Count'] = extract_citation_count_of_year(
+        profile_data['Citation Count of Year Period'] = extract_citation_count_of_year(
             doc, url)
-        profile_data['Total Citations'] = extract_total_citation_count(
+        profile_data['Total Citations of the Profile'] = extract_total_citation_count(
             doc, url)
         article_urls = extract_article_urls(doc, url)
 
@@ -165,28 +167,23 @@ def scrape_profile(url):
 
             # In the case the count was supposed to go up and didn't, manual inspection is required
             elif return_status == 1 and counters == old_counters:
-                print(
-                    f"\nMANUAL INSPECTION REQUIRED:\nNo counts updated: Bad\nProblematic URL:\n{article_url}\n")
+                manual_inspection_required("No counts updated", "article", article_url)
 
                 if test_mode:
                     print("\nNew Counts:\n", counters, "\n")
 
             # If the date format is invalid, manual inspection is required
             elif return_status == 2:
-
-                print(
-                    f"\nMANUAL INSPECTION REQUIRED:\nDate format invalid: Bad\nProblematic URL:\n{article_url}\n")
+                manual_inspection_required("Date format invalid", "article", article_url)
 
             # If there is an error fetching data from the article, manual inspection is required
             elif return_status == 3:
-                print(
-                    f"\nMANUAL INSPECTION REQUIRED:\nError fetching data from article: Bad\nProblematic URL:\n{article_url}\n")
-
+                manual_inspection_required("Error fetching data from article", "article", article_url)
+                
             # If an unrecognized article_field is found, manual inspection is required
             elif return_status == 4:
-                print(
-                    f"\nMANUAL INSPECTION REQUIRED:\nUnrecognized article_field: Bad\nProblematic URL:\n{article_url}\n")
-
+                manual_inspection_required("Unrecognized article_field (type of article could not be dertermined so article was skipped)", "article", article_url)
+                
             # If the article had an issue/skipped then revert to the old counters
             elif return_status == 2 or return_status == 3 or return_status == 4 or return_status == 5:
                 counters = old_counters
