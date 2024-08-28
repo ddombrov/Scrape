@@ -1,109 +1,86 @@
 # Google Scholar Web Scraping
 
+## Summary
+
 This project is designed to scrape Google Scholar using Python, allowing you to collect data such as the h-index, citations, and other scholarly metrics.
 
 ## Support
-For any issues that cannot be resolved, please contact me, Daniel Dombrovsky, at ddombrov@uoguelph.ca.
 
-## Setting Up the Files
-1. urls.txt: This file should contain all the URLs you want to scrape.
-year.txt: Specify the year you want to scrape. For example, entering "2023" will scrape data for the period from May 2023 to April 2024.
-2. output.csv: After scraping, upload this file to Excel or Google Sheets for further analysis.
-3. log.txt: This file logs any issues that require manual inspection. If a profile needs manual review, you'll need to handle the entire profile yourself unless it exceeds 20 articles; in that case, the first 20 articles will be processed for you. For individual articles flagged in the log, you’ll need to complete the review manually. Otherwise, the scraping is considered complete.
-4. summary.csv: After scraping, this does the math for you
+For any unresolved issues, please contact me, Daniel Dombrovsky, at ddombrov@uoguelph.ca.
 
-### Using the Scrape Online
+## Understanding the Files
 
-1. Create Accounts: Sign up for accounts on Replit and GitHub.
-2. Clone the Repository: Copy the GitHub repository URL.
-3. Import to Replit:
-   Go to Replit and import the repository using the copied URL.
-   Replit will handle the setup for you.
-4. Run the Script:
-   Click the Run button at the top of the Replit interface to start the script.
-5. Open the Shell tab and run the following command:
+1. **urls.txt**:  
+   This file should contain all the URLs you want to scrape.
+
+2. **year.txt**:  
+   Specify the year you want to scrape. For example, entering "2023" will scrape data for the period from May 2023 to April 2024.
+
+3. **output.csv**:  
+   After scraping, upload this file to Excel or Google Sheets for further analysis.
+
+4. **log.txt**:  
+   This file logs any issues requiring manual inspection. If a profile needs review, you'll need to handle the entire profile unless it exceeds 20 articles; in that case, the first 20 articles will be processed for you. For individual articles flagged in the log, you’ll need to complete the review manually. Otherwise, the scraping is considered complete.
+
+5. **summary.csv**:  
+   After scraping, this file does the total and average math.
+
+6. **google_scholar_web_scraping.py**:  
+   This script contains all the code required to run the scraper.
+
+7. **keywords.py**:  
+   This file is where you can add, remove, or change certain keywords to detect article types.
+
+## Using the Scraper Online
+
+1. **Create Accounts**:  
+   Sign up for accounts on Replit (skip the tutorial).
+
+2. **Import from GitHub**:  
+   Click the "Import from GitHub" option (right below the "Create Repl" button).
+
+3. **Import from URL**:  
+   In the popup, under "Import from GitHub," paste the following URL under "From URL":
+   https://github.com/ddombrov/Scrape.git
+
+4. **Change the Starting Files**:  
+   Click the plus button to create a new tab. From the options, select "File" (find a file), then select the file you need to change. Do this for `urls.txt` and `year.txt`.
+
+5. **Install the Required Dependencies**:  
+   Click the "Run" button at the top of the Replit interface to start the script.
+
+6. **Run the Script**:  
+   Open the Shell tab and run the following command:
 
 ```bash
 python google_scholar_web_scraping.py > log.txt 2>&1
 ```
 
-6. output.csv will contain the base spreadsheet, while log.txt will tell you where human manual inspection is needed. Manual inspection does mean that the link has been fully ignored (can be either article or profile - visit the link to see what was ignored)
+## Troubleshooting (If Running Locally)
 
-### Using the Scraper Locally
+This explains how to enable activation if you run into an issue (Steps to Change the Execution Policy):
 
-0. **Prerequisites**
+1. **Open PowerShell as Administrator:**
+   Right-click the Start menu and select "Windows PowerShell (Admin)" or "Windows Terminal (Admin)" if you're using Windows 10 or 11.
 
-   Before you start, make sure you have Python installed on your system. You can download it from [python.org](https://www.python.org/downloads/). This project was created with Python version 3.11.
-
-   Ensure that you are able to activate Python environments (see Troubleshooting for help if issues occur).
-
-1. **Open your terminal**
-
-   Mac/Linux:
-   Open the terminal
-
-   Windows:
-   Open the Command Prompt
-
-2. **Clone the repository**:
-
-   Run the following commands by pasting them into the terminal:
+2. **Check the Current Execution Policy:**
+   Run the following command to see your current execution policy:
 
 ```bash
-   git clone https://github.com/ddombrov/Scrape.git
-   cd Scrape
+Get-ExecutionPolicy
 ```
 
-3. **Set up the virtual environment and install dependencies:**:
-
-   Run the following commands by pasting them into the terminal:
-
-   Mac:
-
-```bash
-   python -m venv venv
-   source venv/bin/activate
-   pip install beautifulsoup4
-   pip install requests
-```
-
-Windows:
-
-```bash
-   python -m venv venv
-   venv\Scripts\activate
-   pip install beautifulsoup4
-   pip install requests
-```
-
-4. **Running the script**:
-   Run the following commands by pasting them into the terminal:
-
-```bash
-   python google_scholar_web_scraping.py
-```
-
-### Troubleshooting
-
-**A: How to enable activation if you run into an issue (Steps to Change the Execution Policy):**
-
-1.  Open PowerShell as Administrator. Right-click the Start menu and select "Windows PowerShell (Admin)" or "Windows Terminal (Admin)" if you're using Windows 10 or 11.
-
-2.  Check the Current Execution Policy. Run the following command to see your current execution policy:
-
-```bash
-    Get-ExecutionPolicy
-```
-
-3.  If the execution policy is too restrictive (e.g., Restricted), you can change it to RemoteSigned, which allows scripts that you create locally to run, but requires that scripts downloaded from the internet be signed by a trusted publisher.
+3.  **Change Current Execution Policy:**
+    If the execution policy is too restrictive (e.g., Restricted), you can change it to RemoteSigned, which allows scripts that you create locally to run, but requires that scripts downloaded from the internet be signed by a trusted publisher.
 
 ```bash
     Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
-4.  Confirm the change by typing Y when prompted.
+4.  **Confirm the Change:**
+Type Y when prompted.
 
-5.  Try Activating the Virtual Environment Again: Once the execution policy is changed, you should be able to activate your virtual environment with:
+5.  **Try Activating the Virtual Environment Again: Once the execution policy is changed, you should be able to activate your virtual environment with:
 
     Windows:
 
@@ -155,5 +132,7 @@ rm -rf venv
     pip install requests
 ```
 
-# To Do
-1. add seliumnum functionality to be able to click read more and handle more than 20 articles
+## To Do
+
+1. Incorporate Selenium:
+   Add Selenium functionality to be able to click "Read more" and handle more than 20 articles.
