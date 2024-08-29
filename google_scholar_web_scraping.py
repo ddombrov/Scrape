@@ -176,7 +176,7 @@ def process_urls(input_urls_file, output_spreadsheet_file):
 def process_url(url, writer):
     """Function to process and scrape data for a single URL and write to CSV."""
 
-    time.sleep(random.uniform(1, 3))
+    time.sleep(random.uniform(sleep_time_minimum, sleep_time_maximum))
     profile_data = scrape_profile(url)
 
     if profile_data is not None:
@@ -285,7 +285,7 @@ def scrape_profile(url):
         # Process each article URL
         for article_url in article_urls:
 
-            time.sleep(2)  # Rate limit
+            time.sleep(random.uniform(sleep_time_minimum, sleep_time_maximum))
             article_number += 1
             return_status = 1
             old_counters = counters.copy()
@@ -720,6 +720,8 @@ def create_summary(summary_data):
 test_mode = False  # Set to True to enable test mode
 output_spreadsheet_file = 'output.csv'  # File to save the results
 output_summary_file = 'summary.csv'  # File to save the summary
+sleep_time_minimum = 1  # Minimum sleep time in seconds
+sleep_time_maximum = 3  # Maximum sleep time in seconds
 
 input_urls_file = 'urls.txt' 
 input_year_file = 'year.txt'
