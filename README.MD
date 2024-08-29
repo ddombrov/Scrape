@@ -6,50 +6,50 @@ This project is designed to scrape Google Scholar Bibliometrics data using Pytho
 
 ## Using the Scraper Online
 
+Using the web scraper online is the easier option. If issues occur, scroll down to the explanation on how to use the web scraper locally.
+
 1. **Create Accounts:**  
-   Sign up for accounts on Replit (https://replit.com). Skip the tutorial if prompted. If it asks you for information, enter CEPS Testing for the name, Personal Use for the purpose, Beginner level for experience, and Python for the language. It may open a program for you, just ignore that and return to the Replit homepage.
+   Sign up for accounts on Replit (https://replit.com). Skip the tutorial if prompted. If it asks you for information, enter `CEPS Testing` for the name, `Personal Use` for the purpose, `Beginner level` for experience, and `Python` for the language. It may open a program for you, just ignore that and return to the Replit homepage.
 
 2. **Import from GitHub:**
-   Click the "Import from GitHub" option (right below the "Create Repl" button).
+   Click the `Import from GitHub` option (right below the `Create Repl` button).
 
 3. **Import from URL:**  
-   In the popup, under "Import from GitHub," paste the following URL under "From URL":
-   https://github.com/ddombrov/Scrape.git and then click the button "Import from GitHub" at the bottom.
+   In the popup, under `Import from GitHub`, paste the following URL under `From URL`:
+   `https://github.com/ddombrov/Scrape.git` and then click the button `Import from GitHub` at the bottom.
 
 4. **Change the Starting Files:**
-   Click the plus button to create a new tab. From the options, select "File" (find a file), then select the file you need to change. Do this for `urls.txt` and `year.txt`.
+   Click the plus button to create a new tab. From the options, select `File (find a file)`, then select the file you need to change. Do this for `urls.txt` and `year.txt`.
+
+   `urls.txt`:
+   This file should contain all the URLs you want to scrape (one per line). Try to run maximum 20 URLs at one time (more URLs may time out and the program might end abruptly with no warning).
+
+   `year.txt`:
+   Specify the year you want to scrape. For example, entering `2023` will scrape data for the period from May 2023 to April 2024.
 
 5. **Install the Required Dependencies:**
-   Click the "Run" button at the top of the Replit interface to start the script. Wait a minute to let this complete, only after a minute proceed to next step.
+   Click the `Run` button at the top of the Replit interface to start the script. Wait a minute to let this complete, only after a minute proceed to next step.
 
 6. **Run the Script:**  
    Open the Shell tab and run the following command by pasting it and then pressing enter:
 
-```bash
-python google_scholar_web_scraping.py > log.txt 2>&1
-```
+`python google_scholar_web_scraping.py > log.txt 2>&1`
 
-7. **You are Done:**
-   You should now have an output.csv and log.txt created. Upload the output.csv in Excel/Google Sheets to view the data in a spreadsheet and read the log.txt to find out where manual inspection is needed.
+7. **View Your Results:**
+   You should now have an `output.csv` and `log.txt` created. Upload the `output.csv` in Excel/Google Sheets to view the data in a spreadsheet and read the `log.txt` to find out where manual inspection is needed.
 
-   **output.csv:**
+   `output.csv`:
    After scraping, upload this file to Excel or Google Sheets for further analysis.
 
-   **log.txt:**
+   `log.txt`:
    This file logs any issues requiring manual inspection. If a profile needs review, you'll need to handle the entire profile unless it exceeds 20 articles; in that case, the first 20 articles will be processed for you. For individual articles flagged in the log, you’ll need to complete the review manually. Otherwise, the scraping is considered complete.
 
 ## Understanding the Starting Files
 
-1. **urls.txt:**
-   This file should contain all the URLs you want to scrape. Try to run 20 URLs at one time (more URLs may time out and the program will just end abruptly with no warning)
-
-2. **year.txt:**
-   Specify the year you want to scrape. For example, entering "2023" will scrape data for the period from May 2023 to April 2024.
-
-3. **google_scholar_web_scraping.py:**  
+1. `google_scholar_web_scraping.py`:
    This script contains all the code required to run the scraper.
 
-4. **keywords.py:**
+2. `keywords.py`:
    This file is where you can add, remove, or change certain keywords to detect article types.
 
 ## Using the Scraper Locally
