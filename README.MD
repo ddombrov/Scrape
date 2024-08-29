@@ -27,7 +27,7 @@ This project is designed to scrape Google Scholar Bibliometrics data using Pytho
 ## Using the Scraper Online
 
 1. **Create Accounts**:  
-   Sign up for accounts on Replit (skip the tutorial). If it asks you for information, enter CEPS Testing for the name, Beginner level for experience, Python for the language, and Personal Use for the purpose.
+   Sign up for accounts on Replit (skip the tutorial). If it asks you for information, enter CEPS Testing for the name, Personal Use for the purpose, Beginner level for experience, and Python for the language. It may open a program for you, just ignore that and return to the Replit homepage.
 
 2. **Import from GitHub**:  
    Click the "Import from GitHub" option (right below the "Create Repl" button).
@@ -49,7 +49,7 @@ This project is designed to scrape Google Scholar Bibliometrics data using Pytho
 python google_scholar_web_scraping.py > log.txt 2>&1
 ```
 
-### Using the Scraper Locally
+## Using the Scraper Locally
 
 1. **Prerequisites**
    Before you start, make sure you have Python installed on your system. You can download it from [python.org](https://www.python.org/downloads/). This project was created with Python version 3.11.
@@ -71,6 +71,7 @@ python google_scholar_web_scraping.py > log.txt 2>&1
 
 4. **Set up the virtual environment and install dependencies:**:
    Run the following commands by pasting them into the terminal:
+
    Mac:
 
 ```bash
@@ -93,7 +94,7 @@ Windows:
    Run the following commands by pasting them into the terminal:
 
 ```bash
-   python google_scholar_web_scraping.py
+   python google_scholar_web_scraping.py > log.txt 2>&1
 ```
 
 ## Troubleshooting
