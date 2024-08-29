@@ -107,13 +107,16 @@ For any unresolved issues, please contact me, Daniel Dombrovsky, at ddombrov@uog
 
 You may get an error informing you of too many scrapes ex. Error fetching final URL: 429 Client Error.
 
-2.1. **Reduce the amount of URLs:**
+2.1. **Wait some Time:**
+You may be locked out for some time (it may be asking for CAPTCHAs which the program cannot solve). Waiting an hour or two typically solves the issue. If the issue persists after one day, your organization may be blocked entirely.
+
+2.2. **Reduce the Amount of URLs:**
 Google may be restricting your access and you may need to process only 10 URLs at a time.
 
-2.2. **Reduce Request Frequency:**
+2.3. **Reduce Request Frequency:**
 Increase the sleep time between each URL request to avoid hitting rate limits.
 
-2.3. **Use a Different IP Address or Proxy:**
+2.4. **Use a Different IP Address or Proxy:**
 If possible, switch to a different IP address or proxy to see if the issue persists. This would be easiest by switching to a new Replit file or switching from local/online to the other.
 
 3. **Python Enviornment Activation (Local):**
