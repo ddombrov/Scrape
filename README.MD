@@ -147,9 +147,7 @@ If you get an error code informing you of too many scrapes or something then jus
    Add Selenium/AJAX functionality to be able to click "Read more" and handle more than 20 articles.
 2. **Trim the Name:**
 Remove PhD, etc. from names
-3. **Inform User More:**
-Inform user when started, done profile, and done all
-4. **Update URLS automatically:**
+3. **Update URLS automatically:**
 For example, Gary's was https://scholar.google.com/citations?user=O2yw-uoAAAAJ&hl=en and is now https://scholar.google.com/citations?user=wl3BrEUAAAAJ&hl=en (program cannot handle this)
-5. **Remove Year Period Total**
+4. **Remove Year Period Total**
 Only need total for "Citations"

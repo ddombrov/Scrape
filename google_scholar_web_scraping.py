@@ -11,6 +11,7 @@ from keywords import (conference_keywords, ignored_keywords, citations_keywords,
                       book_chapter_keywords, patent_keywords)
 sys.stdout.reconfigure(encoding='utf-8')
 
+
 def determine_year(year_file):
     """Function to determine the year to extract from the Google Scholar profiles"""
 
@@ -18,11 +19,11 @@ def determine_year(year_file):
         with open(year_file, 'r') as file:
             year = int(file.read())
             if test_mode:
-                print(f"Checkpoint 0: Year data found:\t\t\t\t\t\t\t\t\t\tGood")
+                print(f"Checkpoint 1: Year data found:\t\t\t\t\t\t\t\t\t\tGood")
             return year
     except FileNotFoundError:
-        print(
-            f"Checkpoint 0: Year data not found: Bad\nProblematic year.txt input:\n\"{input_year}\"")
+        manual_inspection_required(
+            "Year data not found", "input_year", year_file)
 
 
 def update_summary(summary_data, profile_data):
@@ -103,19 +104,30 @@ def process_url(url, writer):
 
     if profile_data is not None:
         writer.writerow([
-            str(profile_data.get('Full Name', '')).encode('utf-8', 'ignore').decode('utf-8'),
+            str(profile_data.get('Full Name', '')).encode(
+                'utf-8', 'ignore').decode('utf-8'),
             str(url).encode('utf-8', 'ignore').decode('utf-8'),
             "Yes",
-            str(profile_data.get('Citation Count of Year Period', '')).encode('utf-8', 'ignore').decode('utf-8'),
-            str(profile_data.get('H-Index Since', '')).encode('utf-8', 'ignore').decode('utf-8'),
-            str(profile_data.get('H-Index Overall', '')).encode('utf-8', 'ignore').decode('utf-8'),
-            str(profile_data.get('Peer Reviewed Articles', '')).encode('utf-8', 'ignore').decode('utf-8'),
-            str(profile_data.get('arXiv Preprint', '')).encode('utf-8', 'ignore').decode('utf-8'),
-            str(profile_data.get('Books', '')).encode('utf-8', 'ignore').decode('utf-8'),
-            str(profile_data.get('Book Chapters', '')).encode('utf-8', 'ignore').decode('utf-8'),
-            str(profile_data.get('Conference Papers', '')).encode('utf-8', 'ignore').decode('utf-8'),
-            str(profile_data.get('Patent', '')).encode('utf-8', 'ignore').decode('utf-8'),
-            str(profile_data.get('Total Citations of the Profile', '')).encode('utf-8', 'ignore').decode('utf-8'),
+            str(profile_data.get('Citation Count of Year Period', '')).encode(
+                'utf-8', 'ignore').decode('utf-8'),
+            str(profile_data.get('H-Index Since', '')
+                ).encode('utf-8', 'ignore').decode('utf-8'),
+            str(profile_data.get('H-Index Overall', '')
+                ).encode('utf-8', 'ignore').decode('utf-8'),
+            str(profile_data.get('Peer Reviewed Articles', '')).encode(
+                'utf-8', 'ignore').decode('utf-8'),
+            str(profile_data.get('arXiv Preprint', '')).encode(
+                'utf-8', 'ignore').decode('utf-8'),
+            str(profile_data.get('Books', '')).encode(
+                'utf-8', 'ignore').decode('utf-8'),
+            str(profile_data.get('Book Chapters', '')).encode(
+                'utf-8', 'ignore').decode('utf-8'),
+            str(profile_data.get('Conference Papers', '')).encode(
+                'utf-8', 'ignore').decode('utf-8'),
+            str(profile_data.get('Patent', '')).encode(
+                'utf-8', 'ignore').decode('utf-8'),
+            str(profile_data.get('Total Citations of the Profile', '')).encode(
+                'utf-8', 'ignore').decode('utf-8'),
         ])
 
         return profile_data
@@ -133,12 +145,11 @@ def scrape_profile(url):
 
     # Check if the URL is empty
     if not url:
-        print(
-            f"Checkpoint 2: URL data is empty: Bad\nProblematic URL:\n\"{url}\"")
+        manual_inspection_required("URL data is empty", "profile", url)
         return None
     else:
         if test_mode:
-            print(f"Checkpoint 2: URL data is not empty:\t\t\t\t\t\t\tGood")
+            print(f"Checkpoint 3: URL data is not empty:\t\t\t\t\t\t\tGood")
 
     # Set the headers for the request
     headers = {
@@ -164,7 +175,7 @@ def scrape_profile(url):
         print(f"\n*********************************************************")
         print(f"Full name scan for {full_name} has started.")
         print(f"*********************************************************\n")
-        
+
         profile_data['H-Index Overall'], profile_data['H-Index Since'] = extract_h_index_values(
             doc, url)
         profile_data['Citation Count of Year Period'] = extract_citation_count_of_year(
@@ -197,7 +208,7 @@ def scrape_profile(url):
             # If more than 20 articles are found, manual inspection is required
             if article_number == 20:
                 manual_inspection_required(
-                    "More than 20 articles found (first 20 have been examined, the rest you will need to)", "profile", url)
+                    "More than 20 articles found (first 20 have been examined, the rest you will need to examine manually)", "profile", url)
 
             # If the valid articles have all been processed, break the loop
             if return_status == 0:
@@ -235,7 +246,7 @@ def scrape_profile(url):
             profile_data[key] = value
 
         if test_mode:
-            print(f"\nCheckpoint 6: Returned after scraping from profile:\tGood\n")
+            print(f"\nCheckpoint 7: Returned after scraping from profile:\tGood\n")
 
         full_name = profile_data.get('Full Name', '')
         print(f"*********************************************************")
@@ -245,8 +256,7 @@ def scrape_profile(url):
         return profile_data
 
     except requests.RequestException as e:
-        print(
-            f"Checkpoint 6: Error fetching data from profile and/or articles: Bad\nProblematic URL:\n\"{e}\"")
+        manual_inspection_required("Error fetching data", "article/profile", e)
         return None
 
 
@@ -254,13 +264,13 @@ def transform_url(original_url):
     """Transform the given URL to the desired format."""
 
     if not original_url or not original_url.startswith(('https://scholar.google', 'http://scholar.google')):
-        print(
-            f"\n\n\n\n\nPROFILE:\nCheckpoint 1: Invalid URL scheme: Bad\nProblematic URL:\n\"{original_url}\"")
+        manual_inspection_required(
+            "Invalid URL scheme", "profile", original_url)
         return None
     else:
         if test_mode:
             print(
-                f"\n\n\n\n\nPROFILE:\nCheckpoint 1: Valid URL scheme:\t\t\t\t\t\t\t\t\tGood")
+                f"\n\n\n\n\nPROFILE:\nCheckpoint 2: Valid URL scheme:\t\t\t\t\t\t\t\t\tGood")
 
     parsed_url = urlparse(original_url)
     query_params = parse_qs(parsed_url.query)
@@ -297,11 +307,10 @@ def extract_google_scholar_name(doc, url):
     name = doc.find(id="gsc_prf_in")
     if name:
         if test_mode:
-            print(f"Checkpoint 3: Name was located:\t\t\t\t\t\t\t\t\tGood")
+            print(f"Checkpoint 4: Name was located:\t\t\t\t\t\t\t\t\tGood")
         return name.string
     else:
-        print(
-            f"Checkpoint 3: Name was not located: Bad\nProblematic URL:\n\"{url}\"")
+        manual_inspection_required("Name was not located", "profile", url)
         return "Unknown"
 
 
@@ -323,11 +332,10 @@ def extract_h_index_values(doc, url):
         h_index_overall = td_elements[-2].get_text(strip=True)
         h_index_since = td_elements[-1].get_text(strip=True)
         if test_mode:
-            print(f"Checkpoint 4: H-indices found:\t\t\t\t\t\t\t\t\tGood")
+            print(f"Checkpoint 5: H-indices found:\t\t\t\t\t\t\t\t\tGood")
         return h_index_overall, h_index_since
     else:
-        print(
-            f"Checkpoint 4: H-indices not found: Bad\nProblematic URL:\n\"{url}\"")
+        manual_inspection_required("H-indices not found", "profile", url)
         return None, None
 
 
@@ -354,11 +362,11 @@ def extract_citation_count_of_year(doc, url):
 
     if year_index is not None and year_index < len(values):
         if test_mode:
-            print(f"Checkpoint 9: Citation count data found:\t\t\t\t\t\t\tGood")
+            print(f"Checkpoint 10: Citation count data found:\t\t\t\t\t\t\tGood")
         return year_value
     else:
-        print(
-            f"Checkpoint 9: Citation count data not found: Bad\nProblematic URL:\n\"{url}\"")
+        manual_inspection_required(
+            "Citation count data not found", "profile", url)
         return None
 
 
@@ -379,11 +387,11 @@ def extract_total_citation_count(doc, url):
         total_value = td_elements[-2].get_text(strip=True)
         if test_mode:
             print(
-                f"Checkpoint 10: Total citation count data found:\t\t\t\t\t\t\t\t\tGood")
+                f"Checkpoint 11: Total citation count data found:\t\t\t\t\t\t\t\t\tGood")
         return total_value
     else:
-        print(
-            f"Checkpoint 10: Total citation count data not found: Bad\nProblematic URL:\n\"{url}\"")
+        manual_inspection_required(
+            "Total citation count data not found", "profile", url)
         return total_value
 
 
@@ -418,10 +426,10 @@ def extract_article_urls(doc, url):
     # Check if article URLs were found
     if article_urls:
         if test_mode:
-            print(f"Checkpoint 5: Article URL data found:\t\t\t\t\t\t\tGood")
+            print(f"Checkpoint 6: Article URL data found:\t\t\t\t\t\t\tGood")
     else:
-        print(
-            f"Checkpoint 5: Article URL data not found: Bad\nProblematic URL:\n\"{url}\"")
+        manual_inspection_required(
+            "Article URL data not found", "article", url)
 
     return article_urls
 
@@ -461,8 +469,8 @@ def scrape_article(article_url, counters):
         return process_article_fields(fields, values, counters)
 
     except requests.RequestException as e:
-        print(
-            f"Checkpoint 7: Error fetching data from article: Bad\nProblematic URL:\n\"{e}\"")
+        manual_inspection_required(
+            "Error fetching data from article", "article", e)
         return counters, 3
 
 
@@ -510,12 +518,12 @@ def validate_publication_date(year, month, input_year):
     if not ((year == input_year and month >= 5) or (year == input_year + 1 and month < 5)):
         if test_mode:
             print(
-                f"Checkpoint 8: Publication date is not in the correct range:\t\tArticle skipped")
+                f"Checkpoint 9: Publication date is not in the correct range:\t\tArticle skipped")
         return 5
 
     if test_mode:
         print(
-            f"Checkpoint 8: Publication date is in the correct range:\t\t\tArticle accepted")
+            f"Checkpoint 9: Publication date is in the correct range:\t\t\tArticle accepted")
     return 1
 
 
@@ -581,7 +589,7 @@ def process_article_fields(fields, values, counters):
             return counters, 4
 
     if test_mode:
-        print(f"Checkpoint 7: Article was scraped successfully:\t\t\t\t\tGood")
+        print(f"Checkpoint 8: Article was scraped successfully:\t\t\t\t\tGood")
     return counters, 1
 
 
