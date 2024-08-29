@@ -71,10 +71,12 @@ python google_scholar_web_scraping.py > log.txt 2>&1
 
 4. **Set up the virtual environment and install dependencies:**:
    Run the following commands by pasting them into the terminal:
+   If you have another version of python installed you may need to run python3 in place of python 
 
    Mac:
 
 ```bash
+   python3 -m pip install --upgrade pip
    python -m venv venv
    source venv/bin/activate
    pip install beautifulsoup4
