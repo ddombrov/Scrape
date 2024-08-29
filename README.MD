@@ -6,30 +6,55 @@ This project is designed to scrape Google Scholar Bibliometrics data using Pytho
 
 ## Using the Scraper Online
 
-1. **Create Accounts**:  
+1. **Create Accounts:**  
    Sign up for accounts on Replit (https://replit.com). Skip the tutorial if prompted. If it asks you for information, enter CEPS Testing for the name, Personal Use for the purpose, Beginner level for experience, and Python for the language. It may open a program for you, just ignore that and return to the Replit homepage.
 
-2. **Import from GitHub**:  
+2. **Import from GitHub:**
    Click the "Import from GitHub" option (right below the "Create Repl" button).
 
-3. **Import from URL**:  
+3. **Import from URL:**  
    In the popup, under "Import from GitHub," paste the following URL under "From URL":
    https://github.com/ddombrov/Scrape.git and then click the button "Import from GitHub" at the bottom.
 
-4. **Change the Starting Files**:  
+4. **Change the Starting Files:**
    Click the plus button to create a new tab. From the options, select "File" (find a file), then select the file you need to change. Do this for `urls.txt` and `year.txt`.
 
-5. **Install the Required Dependencies**:  
-   Click the "Run" button at the top of the Replit interface to start the script.
+5. **Install the Required Dependencies:**
+   Click the "Run" button at the top of the Replit interface to start the script. Wait a minute to let this complete, only after a minute proceed to next step.
 
-6. **Run the Script**:  
-   Open the Shell tab and run the following command:
+6. **Run the Script:**  
+   Open the Shell tab and run the following command by pasting it and then pressing enter:
 
 ```bash
 python google_scholar_web_scraping.py > log.txt 2>&1
 ```
 
+7. **You are Done:**
+   You should now have an output.csv and log.txt created. Upload the output.csv in Excel/Google Sheets to view the data in a spreadsheet and read the log.txt to find out where manual inspection is needed.
+
+   **output.csv:**
+   After scraping, upload this file to Excel or Google Sheets for further analysis.
+
+   **log.txt:**
+   This file logs any issues requiring manual inspection. If a profile needs review, you'll need to handle the entire profile unless it exceeds 20 articles; in that case, the first 20 articles will be processed for you. For individual articles flagged in the log, you’ll need to complete the review manually. Otherwise, the scraping is considered complete.
+
+## Understanding the Starting Files
+
+1. **urls.txt:**
+   This file should contain all the URLs you want to scrape. Try to run 20 URLs at one time (more URLs may time out and the program will just end abruptly with no warning)
+
+2. **year.txt:**
+   Specify the year you want to scrape. For example, entering "2023" will scrape data for the period from May 2023 to April 2024.
+
+3. **google_scholar_web_scraping.py:**  
+   This script contains all the code required to run the scraper.
+
+4. **keywords.py:**
+   This file is where you can add, remove, or change certain keywords to detect article types.
+
 ## Using the Scraper Locally
+
+If the scraper is not working online or you are more familar with computer science this may the better option.
 
 1. **Prerequisites**
    Before you start, make sure you have Python installed on your system. You can download it from [python.org](https://www.python.org/downloads/). This project was created with Python version 3.11.
@@ -51,7 +76,7 @@ python google_scholar_web_scraping.py > log.txt 2>&1
 
 4. **Set up the virtual environment and install dependencies:**:
    Run the following commands by pasting them into the terminal:
-   If you have another version of python installed you may need to run python3 in place of python 
+   If you have another version of python installed you may need to run python3 in place of python
 
    Mac:
 
@@ -79,26 +104,6 @@ Windows:
    python google_scholar_web_scraping.py > log.txt 2>&1
 ```
 
-## Understanding the Files
-
-1. **urls.txt**:  
-   This file should contain all the URLs you want to scrape. Try to run 20 URLs at one time (more URLs may time out and the program will just end abruptly with no warning)
-
-2. **year.txt**:  
-   Specify the year you want to scrape. For example, entering "2023" will scrape data for the period from May 2023 to April 2024.
-
-3. **output.csv**:  
-   After scraping, upload this file to Excel or Google Sheets for further analysis.
-
-4. **log.txt**:  
-   This file logs any issues requiring manual inspection. If a profile needs review, you'll need to handle the entire profile unless it exceeds 20 articles; in that case, the first 20 articles will be processed for you. For individual articles flagged in the log, you’ll need to complete the review manually. Otherwise, the scraping is considered complete.
-
-5. **google_scholar_web_scraping.py**:  
-   This script contains all the code required to run the scraper.
-
-6. **keywords.py**:  
-   This file is where you can add, remove, or change certain keywords to detect article types.
-
 ## Troubleshooting
 
 1. **Support (Local or Online):**
@@ -119,7 +124,7 @@ Google may be restricting your access and you may need to process only 10 URLs a
 Increase the sleep time between each URL request to avoid hitting rate limits.
 
 2.4. **Use a Different IP Address or Proxy:**
-If possible, switch to a different IP address or proxy to see if the issue persists. This would be easiest by switching to a new Replit file or switching from local/online to the other.
+If possible, switch to a different IP address or proxy to see if the issue persists. This would be easiest by making a new Replit file or switching from online to local.
 
 3. **Python Enviornment Activation (Local):**
 
