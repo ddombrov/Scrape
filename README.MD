@@ -27,14 +27,14 @@ This project is designed to scrape Google Scholar Bibliometrics data using Pytho
 ## Using the Scraper Online
 
 1. **Create Accounts**:  
-   Sign up for accounts on Replit (skip the tutorial).
+   Sign up for accounts on Replit (skip the tutorial). If it asks you for information, enter CEPS Testing for the name, Beginner level for experience, Python for the language, and Personal Use for the purpose.
 
 2. **Import from GitHub**:  
    Click the "Import from GitHub" option (right below the "Create Repl" button).
 
 3. **Import from URL**:  
    In the popup, under "Import from GitHub," paste the following URL under "From URL":
-   https://github.com/ddombrov/Scrape.git
+   https://github.com/ddombrov/Scrape.git and then click the button "Import from GitHub" at the bottom.
 
 4. **Change the Starting Files**:  
    Click the plus button to create a new tab. From the options, select "File" (find a file), then select the file you need to change. Do this for `urls.txt` and `year.txt`.
