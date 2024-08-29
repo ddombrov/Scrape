@@ -49,6 +49,53 @@ This project is designed to scrape Google Scholar Bibliometrics data using Pytho
 python google_scholar_web_scraping.py > log.txt 2>&1
 ```
 
+### Using the Scraper Locally
+
+1. **Prerequisites**
+   Before you start, make sure you have Python installed on your system. You can download it from [python.org](https://www.python.org/downloads/). This project was created with Python version 3.11.
+   Ensure that you are able to activate Python environments (see Troubleshooting for help if issues occur).
+
+2. **Open your terminal**
+   Mac/Linux:
+   Open the terminal
+   Windows:
+   Open the Command Prompt
+
+3. **Clone the repository**:
+   Run the following commands by pasting them into the terminal:
+
+```bash
+   git clone https://github.com/ddombrov/Scrape.git
+   cd Scrape
+```
+
+4. **Set up the virtual environment and install dependencies:**:
+   Run the following commands by pasting them into the terminal:
+   Mac:
+
+```bash
+   python -m venv venv
+   source venv/bin/activate
+   pip install beautifulsoup4
+   pip install requests
+```
+
+Windows:
+
+```bash
+   python -m venv venv
+   venv\Scripts\activate
+   pip install beautifulsoup4
+   pip install requests
+```
+
+5. **Running the script**:
+   Run the following commands by pasting them into the terminal:
+
+```bash
+   python google_scholar_web_scraping.py
+```
+
 ## Troubleshooting
 
 1. **Support (Local or Online):**
