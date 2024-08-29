@@ -639,8 +639,8 @@ def process_article_fields(fields, values, counters):
 
 test_mode = False  # Set to True to enable test mode
 output_spreadsheet_file = 'output.csv'  # File to save the results
-sleep_time_minimum = 4  # Minimum sleep time in seconds
-sleep_time_maximum = 5  # Maximum sleep time in seconds
+sleep_time_minimum = 1  # Minimum sleep time in seconds
+sleep_time_maximum = 3  # Maximum sleep time in seconds
 
 input_urls_file = 'urls.txt' 
 input_year_file = 'year.txt'
