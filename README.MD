@@ -1,17 +1,13 @@
-# Google Scholar Web Scraping
+# Google Scholar Bibliometrics Web Scraper
 
 ## Summary
 
-This project is designed to scrape Google Scholar using Python, allowing you to collect data such as the h-index, citations, and other scholarly metrics.
-
-## Support
-
-For any unresolved issues, please contact me, Daniel Dombrovsky, at ddombrov@uoguelph.ca.
+This project is designed to scrape Google Scholar Bibliometrics data using Python, allowing you to collect information such as the h-index, citations, and other scholarly metrics.
 
 ## Understanding the Files
 
 1. **urls.txt**:  
-   This file should contain all the URLs you want to scrape.
+   This file should contain all the URLs you want to scrape. Try to run 20 URLs at one time (more URLs may time out and the program will just end abruptly with no warning)
 
 2. **year.txt**:  
    Specify the year you want to scrape. For example, entering "2023" will scrape data for the period from May 2023 to April 2024.
@@ -53,54 +49,31 @@ For any unresolved issues, please contact me, Daniel Dombrovsky, at ddombrov@uog
 python google_scholar_web_scraping.py > log.txt 2>&1
 ```
 
-## Local Permissions Troubleshooting
+## Troubleshooting
 
-This explains how to enable activation if you run into an issue (Steps to Change the Execution Policy):
+1. **Support (Local or Online):**
 
-1. **Open PowerShell as Administrator:**
-   Right-click the Start menu and select "Windows PowerShell (Admin)" or "Windows Terminal (Admin)" if you're using Windows 10 or 11.
+For any unresolved issues, please contact me, Daniel Dombrovsky, at ddombrov@uoguelph.ca.
 
-2. **Check the Current Execution Policy:**
-   Run the following command to see your current execution policy:
+2. **Scraping Google Error Codes (Local or Online):**
 
-```bash
-Get-ExecutionPolicy
-```
+You may get an error informing you of too many scrapes ex. Error fetching final URL: 429 Client Error.
 
-3.  **Change Current Execution Policy:**
-    If the execution policy is too restrictive (e.g., Restricted), you can change it to RemoteSigned, which allows scripts that you create locally to run, but requires that scripts downloaded from the internet be signed by a trusted publisher.
+2.1. **Reduce the amount of URLs:**
+Google may be restricting your access and you may need to process only 10 URLs at a time.
 
-```bash
-    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
+2.2. **Reduce Request Frequency:**
+Increase the sleep time between each URL request to avoid hitting rate limits.
 
-4.  **Confirm the Change:**
-    Type Y when prompted.
+2.3. **Use a Different IP Address or Proxy:**
+If possible, switch to a different IP address or proxy to see if the issue persists. This would be easiest by switching to a new Replit file or switching from local/online to the other.
 
-5.  **Try Activating the Virtual Environment Again:**
-    Once the execution policy is changed, you should be able to activate your virtual environment with:
+3. **Python Enviornment Activation (Local):**
 
-        Windows:
+How to reactive python enviornment.
 
-```bash
-    venv\Scripts\Activate
-```
-
-    Mac:
-
-```bash
-source venv/bin/activate
-```
-
-6.  **Reverting the Execution Policy (Optional):**
-    If you want to revert the execution policy to its original state after activating the environment, you can do so by running: Set-ExecutionPolicy -ExecutionPolicy Restricted -Scope CurrentUser
-
-## Python Enviornment Activation Troubleshooting
-
-How to reactive python enviornment
-
-1.  **Delete the current enviornment:**
-    Try deleting the current enviornment:
+3.1. **Delete the current enviornment:**
+Try deleting the current enviornment:
 
         Windows:
 
@@ -114,8 +87,8 @@ rmdir venv
 rm -rf venv
 ```
 
-2.  **Reinstall the Dependencies:**
-    Reinstall the dependencies and setup the virtual enviornment:
+3.2. **Reinstall the Dependencies:**
+Reinstall the dependencies and setup the virtual enviornment:
 
         Mac:
 
@@ -135,24 +108,47 @@ rm -rf venv
     pip install requests
 ```
 
-## Scraping Google Error Codes Troubleshooting
+4. **Invalid Permissions (Local):**
 
-**Error Code Explanation:**
-You may get an error informing you of too many scrapes
-ex. Error fetching final URL: 429 Client Error
+This explains the steps to change the execution policy:
 
-This happens when the Google thinks it needs extra security due to too many visits.
+4.1. **Open PowerShell as Administrator:**
+Right-click the Start menu and select "Windows PowerShell (Admin)" or "Windows Terminal (Admin)" if you're using Windows 10 or 11.
 
-**Suggested Actions:**
+4.2. **Check the Current Execution Policy:**
+Run the following command to see your current execution policy:
 
-**A. Reduce the amount of URLs:**
-It may be easier to do 10 URLs at a time
+```bash
+Get-ExecutionPolicy
+```
 
-**B. Reduce Request Frequency:**
-Increase the sleep time between each URL request to avoid hitting rate limits.
+4.3. **Change Current Execution Policy:**
+If the execution policy is too restrictive (e.g., Restricted), you can change it to RemoteSigned, which allows scripts that you create locally to run, but requires that scripts downloaded from the internet be signed by a trusted publisher.
 
-**C. Use a Different IP Address or Proxy:**
-If possible, switch to a different IP address or proxy to see if the issue persists. This would be easiest by switching to a new Replit file or switching from local/online to the other.
+```bash
+    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+4.4. **Confirm the Change:**
+Type Y when prompted.
+
+4.5. **Try Activating the Virtual Environment Again:**
+Once the execution policy is changed, you should be able to activate your virtual environment with:
+
+        Windows:
+
+```bash
+    venv\Scripts\Activate
+```
+
+    Mac:
+
+```bash
+source venv/bin/activate
+```
+
+4.6. **Reverting the Execution Policy (Optional):**
+If you want to revert the execution policy to its original state after activating the environment, you can do so by running: Set-ExecutionPolicy -ExecutionPolicy Restricted -Scope CurrentUser
 
 ## To Do
 
