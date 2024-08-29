@@ -5,6 +5,7 @@ import time
 import random
 import re
 import sys
+import os
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 from keywords import (conference_keywords, ignored_keywords, citations_keywords,
                       preprint_keywords, journal_keywords, book_keywords,
@@ -12,46 +13,122 @@ from keywords import (conference_keywords, ignored_keywords, citations_keywords,
 sys.stdout.reconfigure(encoding='utf-8')
 
 
-def determine_year(year_file):
+def is_file_empty(file_path):
+    return os.path.getsize(file_path) == 0
+
+
+def get_final_url(url):
+    """
+    Function to follow a URL redirection and return the final URL.
+    Args:
+        url (str): The original URL.
+    Returns:
+        str: The final URL after all redirects.
+    """
+    try:
+        # Send a GET request and allow redirects
+        response = requests.get(url, allow_redirects=True)
+        response.raise_for_status()
+        final_url = response.url
+
+        # Check if the final URL is different from the original one
+        if final_url != url:
+            print(f"URL has been redirected: {url} -> {final_url}")
+        else:
+            print(f"No redirection detected for URL: {url}")
+
+        return final_url
+    except requests.RequestException as e:
+        print(f"Error fetching final URL: {e}")
+        return None
+
+
+def determine_year(input_year_file):
     """Function to determine the year to extract from the Google Scholar profiles"""
 
     try:
-        with open(year_file, 'r') as file:
-            year = int(file.read())
+        with open(input_year_file, 'r') as file:
+        
+            year = file.read()
+            if year:
+                int(year.strip())
+
+            if not year:
+                manual_inspection_required(
+                    "Invalid year data", "input year file", input_year_file)
+                return None
+
+            year = int(year)
+
             if test_mode:
                 print(f"Checkpoint 1: Year data found:\t\t\t\t\t\t\t\t\t\tGood")
+
             return year
+
     except FileNotFoundError:
         manual_inspection_required(
-            "Year data not found", "input_year", year_file)
+            "Year data not found", "input year file", input_year_file)
+        return None
 
 
 def update_summary(summary_data, profile_data):
+
+    # if profile_data is not None:
+
     # Extract data from the profile
-    total_citations = int(profile_data.get('Citation Count of Year Period', 0))
-    h_index_since = int(profile_data.get('H-Index Since', 0))
-    h_index_overall = int(profile_data.get('H-Index Overall', 0))
-    peer_reviewed_articles = int(profile_data.get('Peer Reviewed Articles', 0))
-    conference_papers = int(profile_data.get('Conference Papers', 0))
+    # total_citations = int(profile_data.get(
+    #     'Citation Count of Year Period', 0))
+    # h_index_since = int(profile_data.get('H-Index Since', 0))
+    # h_index_overall = int(profile_data.get('H-Index Overall', 0))
+    # peer_reviewed_articles = int(
+    #     profile_data.get('Peer Reviewed Articles', 0))
+    # conference_papers = int(profile_data.get('Conference Papers', 0))
 
-    # Update the summary data
-    summary_data['total_citations'] += total_citations
-    summary_data['total_h_index_since'] += h_index_since
-    summary_data['total_h_index_overall'] += h_index_overall
-    summary_data['total_peer_reviewed_articles'] += peer_reviewed_articles
-    summary_data['total_conference_papers'] += conference_papers
-    summary_data['num_profiles'] += 1
+    if summary_data is not None and profile_data is not None:
+
+        # Update the summary data
+        summary_data['total_citations'] += int(
+            profile_data.get('Total Citations of the Profile', 0))
+        summary_data['total_h_index_since'] += int(
+            profile_data.get('H-Index Since', 0))
+        summary_data['total_h_index_overall'] += int(
+            profile_data.get('H-Index Overall', 0))
+        summary_data['total_peer_reviewed_articles'] += int(
+            profile_data.get('Peer Reviewed Articles', 0))
+        summary_data['total_conference_papers'] += int(
+            profile_data.get('Conference Papers', 0))
+        summary_data['num_profiles'] += 1
 
 
-def process_urls(input_file, output_file):
+def check_input_file(input_file):
+
+    try:
+        with open(input_file, 'r') as file:
+            if is_file_empty(input_file):
+                manual_inspection_required(
+                    "File is empty", "input file", input_file)
+                exit("Program will now exit")
+
+            if test_mode:
+                print(f"Checkpoint 0: File is not empty:\t\t\t\t\t\t\t\t\t\tGood")
+            
+            return True
+        
+    except FileNotFoundError:
+        manual_inspection_required(
+            "A file was not found", "input file", input_file)
+        exit("Program will now exit")
+
+
+def process_urls(input_urls_file, output_spreadsheet_file):
     """Function to process a list of URLs"""
 
     # Read the URLs from the input file
-    with open(input_file, 'r') as file:
+    with open(input_urls_file, 'r') as file:
         urls = file.read().splitlines()
 
     # Write the header row to the CSV file
-    with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
+    with open(output_spreadsheet_file, 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow([
             'Full Name', 'Link', 'Google Scholar',
@@ -133,19 +210,28 @@ def process_url(url, writer):
         return profile_data
 
 
-def manual_inspection_required(issue, location_type, url):
+def manual_inspection_required(issue, location_type, location):
     print(
-        f"MANUAL INSPECTION REQUIRED:\n{issue}: Bad\nProblematic {location_type} URL:\n{url}\n\n")
+        f"MANUAL INSPECTION REQUIRED:\n{issue}: Bad\nProblematic {location_type}:\n{location}\n\n")
 
 
 def scrape_profile(url):
     """Function to scrape data from a profile"""
 
+    # Get the final URL after following any redirects
+    final_url = get_final_url(url)
+
+    # If final URL is None, manual inspection is required
+    if not final_url:
+        manual_inspection_required(
+            "Unable to resolve final URL", "profile URL", url)
+        return None
+
     url = transform_url(url)
 
     # Check if the URL is empty
     if not url:
-        manual_inspection_required("URL data is empty", "profile", url)
+        manual_inspection_required("URL data is empty", "profile URL", url)
         return None
     else:
         if test_mode:
@@ -208,7 +294,7 @@ def scrape_profile(url):
             # If more than 20 articles are found, manual inspection is required
             if article_number == 20:
                 manual_inspection_required(
-                    "More than 20 articles found (first 20 have been examined, the rest you will need to examine manually)", "profile", url)
+                    "More than 20 articles found (first 20 have been examined, the rest you will need to examine manually)", "profile URL", url)
 
             # If the valid articles have all been processed, break the loop
             if return_status == 0:
@@ -217,7 +303,7 @@ def scrape_profile(url):
             # In the case the count was supposed to go up and didn't, manual inspection is required
             elif return_status == 1 and counters == old_counters:
                 manual_inspection_required(
-                    "No counts updated", "article", article_url)
+                    "No counts updated", "article URL", article_url)
 
                 if test_mode:
                     print("\nNew Counts:\n", counters, "\n")
@@ -225,17 +311,17 @@ def scrape_profile(url):
             # If the date format is invalid, manual inspection is required
             elif return_status == 2:
                 manual_inspection_required(
-                    "Date format invalid", "article", article_url)
+                    "Date format invalid", "article URL", article_url)
 
             # If there is an error fetching data from the article, manual inspection is required
             elif return_status == 3:
                 manual_inspection_required(
-                    "Error fetching data from article", "article", article_url)
+                    "Error fetching data from article", "article URL", article_url)
 
             # If an unrecognized article_field is found, manual inspection is required
             elif return_status == 4:
                 manual_inspection_required(
-                    "Unrecognized article_field (type of article could not be dertermined so article was skipped)", "article", article_url)
+                    "Unrecognized article_field (type of article could not be dertermined so article was skipped)", "article URL", article_url)
 
             # If the article had an issue/skipped then revert to the old counters
             elif return_status == 2 or return_status == 3 or return_status == 4 or return_status == 5:
@@ -265,7 +351,7 @@ def transform_url(original_url):
 
     if not original_url or not original_url.startswith(('https://scholar.google', 'http://scholar.google')):
         manual_inspection_required(
-            "Invalid URL scheme", "profile", original_url)
+            "Invalid URL scheme", "profile URL", original_url)
         return None
     else:
         if test_mode:
@@ -310,7 +396,7 @@ def extract_google_scholar_name(doc, url):
             print(f"Checkpoint 4: Name was located:\t\t\t\t\t\t\t\t\tGood")
         return name.string
     else:
-        manual_inspection_required("Name was not located", "profile", url)
+        manual_inspection_required("Name was not located", "profile URL", url)
         return "Unknown"
 
 
@@ -335,7 +421,7 @@ def extract_h_index_values(doc, url):
             print(f"Checkpoint 5: H-indices found:\t\t\t\t\t\t\t\t\tGood")
         return h_index_overall, h_index_since
     else:
-        manual_inspection_required("H-indices not found", "profile", url)
+        manual_inspection_required("H-indices not found", "profile URL", url)
         return None, None
 
 
@@ -366,7 +452,7 @@ def extract_citation_count_of_year(doc, url):
         return year_value
     else:
         manual_inspection_required(
-            "Citation count data not found", "profile", url)
+            "Citation count data not found", "profile URL", url)
         return None
 
 
@@ -391,7 +477,7 @@ def extract_total_citation_count(doc, url):
         return total_value
     else:
         manual_inspection_required(
-            "Total citation count data not found", "profile", url)
+            "Total citation count data not found", "profile URL", url)
         return total_value
 
 
@@ -429,7 +515,7 @@ def extract_article_urls(doc, url):
             print(f"Checkpoint 6: Article URL data found:\t\t\t\t\t\t\tGood")
     else:
         manual_inspection_required(
-            "Article URL data not found", "article", url)
+            "Article URL data not found", "article URL", url)
 
     return article_urls
 
@@ -470,7 +556,7 @@ def scrape_article(article_url, counters):
 
     except requests.RequestException as e:
         manual_inspection_required(
-            "Error fetching data from article", "article", e)
+            "Error fetching data from article", "article URL", e)
         return counters, 3
 
 
@@ -607,7 +693,7 @@ def create_summary(summary_data):
         num_profiles if num_profiles else 0
 
     # Write the header row to the CSV file
-    with open(summary_file, 'w', newline='') as csvfile:
+    with open(output_summary_file, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow([
             'Total Citations of all Profiles',
@@ -631,13 +717,17 @@ def create_summary(summary_data):
         ])
 
 
-input_file = 'urls.txt'  # File containing list of URLs
-output_file = 'output.csv'  # File to save the results
-summary_file = 'summary.csv'  # File to save the summary
-year_file = 'year.txt'  # File containing year to extract
 test_mode = False  # Set to True to enable test mode
+output_spreadsheet_file = 'output.csv'  # File to save the results
+output_summary_file = 'summary.csv'  # File to save the summary
+
+input_urls_file = 'urls.txt' 
+input_year_file = 'year.txt'
+check_input_file(input_urls_file)
+check_input_file(input_year_file)
+
+input_year = determine_year(input_year_file)
+since_input_year = input_year - 4
 
 # Run the process
-input_year = determine_year(year_file)
-since_input_year = input_year - 4
-process_urls(input_file, output_file)
+process_urls(input_urls_file, output_spreadsheet_file)

@@ -139,15 +139,31 @@ rm -rf venv
 ```
 
 ## Scraping Google Error Codes Troubleshooting
-If you get an error code informing you of too many scrapes or something then just wait some time. May need to be used 10 profiles at a time.
+
+**Error Code Explanation:**
+You may get an error informing you of too many scrapes
+ex. Error fetching final URL: 429 Client Error
+
+This happens when the Google thinks it needs extra security due to too many visits.
+
+**Suggested Actions:**
+
+**A. Reduce the amount of URLs:**
+It may be easier to do 10 URLs at a time
+
+**B. Reduce Request Frequency:**
+Increase the sleep time between each URL request to avoid hitting rate limits.
+
+**C. Use a Different IP Address or Proxy:**
+If possible, switch to a different IP address or proxy to see if the issue persists. This would be easiest by switching to a new Replit file or switching from local/online to the other.
 
 ## To Do
 
 1. **Incorporate Clicking:**
    Add Selenium/AJAX functionality to be able to click "Read more" and handle more than 20 articles.
 2. **Trim the Name:**
-Remove PhD, etc. from names
+   Remove PhD, random characters from names (may not be possible to determine what is middle name and not title)
 3. **Update URLS automatically:**
-For example, Gary's was https://scholar.google.com/citations?user=O2yw-uoAAAAJ&hl=en and is now https://scholar.google.com/citations?user=wl3BrEUAAAAJ&hl=en (program cannot handle this)
+   For example, Gary's was https://scholar.google.com/citations?user=O2yw-uoAAAAJ&hl=en and is now https://scholar.google.com/citations?user=wl3BrEUAAAAJ&hl=en (program cannot handle this)
 4. **Remove Year Period Total**
-Only need total for "Citations"
+   Only need total for "Citations"
