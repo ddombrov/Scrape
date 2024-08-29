@@ -4,26 +4,6 @@
 
 This project is designed to scrape Google Scholar Bibliometrics data using Python, allowing you to collect information such as the h-index, citations, and other scholarly metrics.
 
-## Understanding the Files
-
-1. **urls.txt**:  
-   This file should contain all the URLs you want to scrape. Try to run 20 URLs at one time (more URLs may time out and the program will just end abruptly with no warning)
-
-2. **year.txt**:  
-   Specify the year you want to scrape. For example, entering "2023" will scrape data for the period from May 2023 to April 2024.
-
-3. **output.csv**:  
-   After scraping, upload this file to Excel or Google Sheets for further analysis.
-
-4. **log.txt**:  
-   This file logs any issues requiring manual inspection. If a profile needs review, you'll need to handle the entire profile unless it exceeds 20 articles; in that case, the first 20 articles will be processed for you. For individual articles flagged in the log, you’ll need to complete the review manually. Otherwise, the scraping is considered complete.
-
-5. **google_scholar_web_scraping.py**:  
-   This script contains all the code required to run the scraper.
-
-6. **keywords.py**:  
-   This file is where you can add, remove, or change certain keywords to detect article types.
-
 ## Using the Scraper Online
 
 1. **Create Accounts**:  
@@ -98,6 +78,26 @@ Windows:
 ```bash
    python google_scholar_web_scraping.py > log.txt 2>&1
 ```
+
+## Understanding the Files
+
+1. **urls.txt**:  
+   This file should contain all the URLs you want to scrape. Try to run 20 URLs at one time (more URLs may time out and the program will just end abruptly with no warning)
+
+2. **year.txt**:  
+   Specify the year you want to scrape. For example, entering "2023" will scrape data for the period from May 2023 to April 2024.
+
+3. **output.csv**:  
+   After scraping, upload this file to Excel or Google Sheets for further analysis.
+
+4. **log.txt**:  
+   This file logs any issues requiring manual inspection. If a profile needs review, you'll need to handle the entire profile unless it exceeds 20 articles; in that case, the first 20 articles will be processed for you. For individual articles flagged in the log, you’ll need to complete the review manually. Otherwise, the scraping is considered complete.
+
+5. **google_scholar_web_scraping.py**:  
+   This script contains all the code required to run the scraper.
+
+6. **keywords.py**:  
+   This file is where you can add, remove, or change certain keywords to detect article types.
 
 ## Troubleshooting
 
