@@ -22,13 +22,10 @@ For any unresolved issues, please contact me, Daniel Dombrovsky, at ddombrov@uog
 4. **log.txt**:  
    This file logs any issues requiring manual inspection. If a profile needs review, you'll need to handle the entire profile unless it exceeds 20 articles; in that case, the first 20 articles will be processed for you. For individual articles flagged in the log, you’ll need to complete the review manually. Otherwise, the scraping is considered complete.
 
-5. **summary.csv**:  
-   After scraping, this file does the total and average math.
-
-6. **google_scholar_web_scraping.py**:  
+5. **google_scholar_web_scraping.py**:  
    This script contains all the code required to run the scraper.
 
-7. **keywords.py**:  
+6. **keywords.py**:  
    This file is where you can add, remove, or change certain keywords to detect article types.
 
 ## Using the Scraper Online

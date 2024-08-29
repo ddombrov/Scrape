@@ -71,35 +71,6 @@ def determine_year(input_year_file):
         return None
 
 
-def update_summary(summary_data, profile_data):
-
-    # if profile_data is not None:
-
-    # Extract data from the profile
-    # total_citations = int(profile_data.get(
-    #     'Citation Count of Year Period', 0))
-    # h_index_since = int(profile_data.get('H-Index Since', 0))
-    # h_index_overall = int(profile_data.get('H-Index Overall', 0))
-    # peer_reviewed_articles = int(
-    #     profile_data.get('Peer Reviewed Articles', 0))
-    # conference_papers = int(profile_data.get('Conference Papers', 0))
-
-    if summary_data is not None and profile_data is not None:
-
-        # Update the summary data
-        summary_data['total_citations'] += int(
-            profile_data.get('Total Citations of the Profile', 0))
-        summary_data['total_h_index_since'] += int(
-            profile_data.get('H-Index Since', 0))
-        summary_data['total_h_index_overall'] += int(
-            profile_data.get('H-Index Overall', 0))
-        summary_data['total_peer_reviewed_articles'] += int(
-            profile_data.get('Peer Reviewed Articles', 0))
-        summary_data['total_conference_papers'] += int(
-            profile_data.get('Conference Papers', 0))
-        summary_data['num_profiles'] += 1
-
-
 def check_input_file(input_file):
 
     try:
@@ -151,23 +122,11 @@ def process_urls(input_urls_file, output_spreadsheet_file):
             'Total Conference Papers'
         ])
 
-        summary_data = {
-            'total_citations': 0,
-            'total_h_index_since': 0,
-            'total_h_index_overall': 0,
-            'total_peer_reviewed_articles': 0,
-            'total_conference_papers': 0,
-            'num_profiles': 0
-        }
-
         if test_mode:
             print("PROCESS HAS BEGUN SCRAPING")
 
         for url in urls:
             profile_data = process_url(url, writer)
-            update_summary(summary_data, profile_data)
-
-        create_summary(summary_data)
 
     if test_mode:
         print("\n\nPROCESS COMPLETED SUCCESSFULLY\n\n")
@@ -678,48 +637,8 @@ def process_article_fields(fields, values, counters):
         print(f"Checkpoint 8: Article was scraped successfully:\t\t\t\t\tGood")
     return counters, 1
 
-
-def create_summary(summary_data):
-    num_profiles = summary_data['num_profiles']
-
-    # Calculate averages
-    average_citations_per_researcher = summary_data['total_citations'] / \
-        num_profiles if num_profiles else 0
-    average_h_index_since = summary_data['total_h_index_since'] / \
-        num_profiles if num_profiles else 0
-    average_overall_h_index = summary_data['total_h_index_overall'] / \
-        num_profiles if num_profiles else 0
-    average_peer_reviewed_publications = summary_data['total_peer_reviewed_articles'] / \
-        num_profiles if num_profiles else 0
-
-    # Write the header row to the CSV file
-    with open(output_summary_file, 'w', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow([
-            'Total Citations of all Profiles',
-            f'Average Citations per Researcher in {input_year}',
-            f'Average H-Index Since {since_input_year} per Researcher',
-            'Average Overall H-Index',
-            'Total Peer Reviewed Articles',
-            'Average Peer Reviewed Publications per Researcher',
-            'Total Conference Papers'
-        ])
-
-        # Write the calculated data to the CSV
-        writer.writerow([
-            summary_data['total_citations'],
-            average_citations_per_researcher,
-            average_h_index_since,
-            average_overall_h_index,
-            summary_data['total_peer_reviewed_articles'],
-            average_peer_reviewed_publications,
-            summary_data['total_conference_papers']
-        ])
-
-
 test_mode = False  # Set to True to enable test mode
 output_spreadsheet_file = 'output.csv'  # File to save the results
-output_summary_file = 'summary.csv'  # File to save the summary
 sleep_time_minimum = 1  # Minimum sleep time in seconds
 sleep_time_maximum = 3  # Maximum sleep time in seconds
 
