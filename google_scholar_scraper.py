@@ -99,23 +99,27 @@ def scrape_profile_data(results):
     """Extracts author's name and profile details."""
     return results.get("author", {}).get("name")
 
-def scrape_profile_citations(results, input_year, since_input_year):
+def scrape_profile_citations(results, input_year, author_name):
     """Extracts total citations, H-index values, and logs missing data."""
     citation_data = results.get("cited_by", {}).get("table", [])
     total_citations, year_citations, h_index_overall, h_index_since = None, None, None, None
+    since_year = None  # ✅ Store the correct "Since Year"
 
     try:
         total_citations = citation_data[0]["citations"]["all"]
         h_index_overall = citation_data[1]["h_index"]["all"]
 
-        since_key = f"since_{since_input_year}"
-        h_index_since = citation_data[1]["h_index"].get(since_key, None)
+        # ✅ Extract the correct "Since Year" dynamically
+        since_year = citation_data[1]["h_index"].keys() - {"all"}
+        since_year = list(since_year)[0] if since_year else None  # Get first available key
 
-        if h_index_since is None:
-            log_error(f"{author_name}'s profile is missing H-Index Since {since_input_year}. Might be new.", separator=True)
+        if since_year:
+            h_index_since = citation_data[1]["h_index"].get(since_year, None)
+        else:
+            log_error(f"{author_name}'s profile is missing the 'Since' year for H-Index.", separator=True)
 
-    except (IndexError, KeyError, TypeError):
-        log_error(f"Error extracting citation metrics for profile.")
+    except (IndexError, KeyError, TypeError) as e:
+        log_error(f"Error extracting citation metrics for {author_name}: {e}")
 
     try:
         citation_graph = results.get("cited_by", {}).get("graph", [])
@@ -124,30 +128,30 @@ def scrape_profile_citations(results, input_year, since_input_year):
                 year_citations = year_data["citations"]
                 break
         if year_citations is None:
-            log_error(f"No citation data found for {input_year}.")
-    except (KeyError, TypeError):
-        log_error(f"Error extracting citations in {input_year}.")
+            log_error(f"No citation data found for {author_name} in {input_year}.")
+    except (KeyError, TypeError) as e:
+        log_error(f"Error extracting citations for {author_name} in {input_year}: {e}")
 
-    return total_citations, year_citations, h_index_overall, h_index_since
+    return total_citations, year_citations, h_index_overall, h_index_since, since_year
 
-def scrape_profile(author_id, author_url, author_name, input_year, since_input_year):
+def scrape_profile(author_id, author_url, author_name, input_year):
     """Scrape all details from a single author's profile."""
     results = fetch_scholar_data(author_id)
     if results is None:
         log_error(f"Failed to retrieve profile for {author_name} ({author_id})")
         return None
 
-    total_citations, year_citations, h_index_overall, h_index_since = scrape_profile_citations(
-        results, input_year, since_input_year
+    total_citations, year_citations, h_index_overall, h_index_since, since_year = scrape_profile_citations(
+        results, input_year, author_name  # ✅ since_year now extracted inside function
     )
 
     if h_index_since is None:
-        log_error(f"{author_name}'s profile is missing H-Index Since {since_input_year}. Might be new.")
+        log_error(f"{author_name}'s profile is missing H-Index Since {since_year or 'UNKNOWN'}. Might be new.", separator=True)
 
     article_counters, missing_year_articles = scrape_articles(author_id, author_name, input_year)
 
     if sum(article_counters.values()) == 0:
-        log_error(f"No articles found for {author_name}. Possible new or inactive profile.")
+        log_error(f"No articles found for {author_name}. Possible new or inactive profile.", separator=True)
 
     if missing_year_articles:
         log_error(
@@ -162,7 +166,7 @@ def scrape_profile(author_id, author_url, author_name, input_year, since_input_y
         "Total Citations": total_citations,
         f"Citations in {input_year}": year_citations,
         "H-Index Overall": h_index_overall,
-        f"H-Index Since {since_input_year}": h_index_since,
+        f"H-Index Since {since_year or 'UNKNOWN'}": h_index_since,  # ✅ Corrected key
         **article_counters
     }
 
@@ -235,10 +239,26 @@ def scrape_articles(author_id, author_name, input_year):
     return counters, missing_year_articles  
 
 def save_to_csv(data, filename):
-    """Save extracted data to a CSV file."""
+    """Save extracted data to a CSV file, including totals."""
     df = pd.DataFrame(data)
+
+    # ✅ Convert numeric columns to numeric type (ignore non-numeric columns)
+    numeric_cols = df.columns[2:]  # Exclude "Full Name" & "Google Scholar Profile URL"
+    df[numeric_cols] = df[numeric_cols].apply(pd.to_numeric, errors='coerce')
+
+    # ✅ Compute totals (sum for numeric columns)
+    totals = df[numeric_cols].sum(numeric_only=True)
+
+    # ✅ Create "Total" row with empty name & profile link
+    total_row = pd.Series(["Total", ""] + totals.tolist(), index=df.columns)
+
+    # ✅ Append the total row to the DataFrame
+    df = pd.concat([df, pd.DataFrame([total_row])], ignore_index=True)
+
+    # ✅ Save to CSV
     df.to_csv(filename, encoding="utf-8", index=False)
     print(f"Data saved to {filename}")
+
 
 ### --- 4. MAIN EXECUTION --- ###
 if __name__ == "__main__":
@@ -255,7 +275,7 @@ if __name__ == "__main__":
     for author_id, url in author_urls.items():
         results = fetch_scholar_data(author_id)
         author_name = scrape_profile_data(results) if results else "Unknown Author"
-        profile_data = scrape_profile(author_id, url, author_name, input_year, since_input_year)
+        profile_data = scrape_profile(author_id, url, author_name, input_year)
         if profile_data:
             authors_data.append(profile_data)
 
