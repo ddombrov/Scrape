@@ -1,0 +1,3 @@
+pandas
+serpapi
+python-dotenv
