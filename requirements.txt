@@ -1,3 +1,4 @@
 pandas
 serpapi
 python-dotenv
+google-search-results
