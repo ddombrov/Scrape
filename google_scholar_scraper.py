@@ -102,11 +102,11 @@ def scrape_profile_data(results):
 def scrape_profile_citations(results, input_year, author_name):
     """Extracts total citations, H-index values, and logs missing data."""
     citation_data = results.get("cited_by", {}).get("table", [])
-    google_scholar_status, year_citations, h_index_overall, h_index_since = None, None, None, None
+    total_citations, year_citations, h_index_overall, h_index_since = None, None, None, None
     since_year = None  # ✅ Store the correct "Since Year"
 
     try:
-        google_scholar_status = "yes"
+        total_citations = citation_data[0]["citations"]["all"]
         h_index_overall = citation_data[1]["h_index"]["all"]
 
         # ✅ Extract the correct "Since Year" dynamically
@@ -132,7 +132,7 @@ def scrape_profile_citations(results, input_year, author_name):
     except (KeyError, TypeError) as e:
         log_error(f"Error extracting citations for {author_name} in {input_year}: {e}")
 
-    return google_scholar_status, year_citations, h_index_overall, h_index_since, since_year
+    return total_citations, year_citations, h_index_overall, h_index_since, since_year
 
 def scrape_profile(author_id, author_url, author_name, input_year):
     """Scrape all details from a single author's profile."""
@@ -141,7 +141,7 @@ def scrape_profile(author_id, author_url, author_name, input_year):
         log_error(f"Failed to retrieve profile for {author_name} ({author_id})")
         return None
 
-    google_scholar_status, year_citations, h_index_overall, h_index_since, since_year = scrape_profile_citations(
+    total_citations, year_citations, h_index_overall, h_index_since, since_year = scrape_profile_citations(
         results, input_year, author_name  # ✅ since_year now extracted inside function
     )
 
@@ -163,7 +163,7 @@ def scrape_profile(author_id, author_url, author_name, input_year):
     return {
         "Full Name": author_name,
         "Google Scholar Profile URL": author_url,
-        "Google Scholar": google_scholar_status,
+        "Total Citations": total_citations,
         f"Citations in {input_year}": year_citations,
         "H-Index Overall": h_index_overall,
         f"H-Index Since {since_year or 'UNKNOWN'}": h_index_since,  # ✅ Corrected key
