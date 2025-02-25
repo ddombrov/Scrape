@@ -20,7 +20,7 @@ This project scrapes Google Scholar Bibliometrics data using Python, allowing yo
 7. **Run the Scraper**  
    Click the "Run" button or open the Shell and type:
    ```
-   python google_scholar_web_scraping.py
+   python google_scholar_scraper.py
    ```
 
 ## 🛠 Getting Started (Local - Full Control)
@@ -43,9 +43,9 @@ sudo apt update && sudo apt install python3 python3-pip -y
 ```
 
 ### **2. Download the Scraper**
+Fork: https://github.com/ddombrov/Scrape.git
 Open a terminal or command prompt and run:
 ```bash
-git clone https://github.com/ddombrov/Scrape.git
 cd Scrape
 ```
 
@@ -62,7 +62,7 @@ pip install -r requirements.txt
 
 ### **6. Run the Scraper**
 ```
-python google_scholar_web_scraping.py
+python google_scholar_scraper.py
 ```
 
 ## 🔑 API Key Setup (Required)
