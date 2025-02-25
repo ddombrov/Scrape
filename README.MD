@@ -43,7 +43,8 @@ sudo apt update && sudo apt install python3 python3-pip -y
 ```
 
 ### **2. Download the Scraper**
-Fork: https://github.com/ddombrov/Scrape.git
+Fork: https://github.com/ddombrov/Scrape.git.
+Then clone your forked repo.
 Open a terminal or command prompt and run:
 ```bash
 cd Scrape
